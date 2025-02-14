@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dealership Demo Start</title>
+  <link rel="stylesheet" href="start.css">
+</head>
+<body>
+  <!-- Step 1: Customer Info -->
+  <div id="step1" class="step">
+    <h2>Customer Info</h2>
+    <form id="customerForm">
+      <label for="customerName">Customer First Name:</label>
+      <input type="text" id="customerName" required>
+      
+      <label for="email">Email (optional):</label>
+      <input type="email" id="email">
+      
+      <label for="phone">Phone Number (optional but recommended):</label>
+      <input type="tel" id="phone">
+      
+      <button type="submit">Next</button>
+    </form>
+  </div>
+  
+  <!-- Step 2: Photo Options -->
+  <div id="step2" class="step" style="display:none;">
+    <h2>Vehicle Photo</h2>
+    <div id="photoMethodSelection">
+      <button id="btnTakePhoto">Take Photo</button>
+      <button id="btnUploadPhoto">Upload Photo</button>
+      <button id="btnImageUrl">Image URL</button>
+    </div>
+    
+    <div id="photoOptions" style="display:none;">
+      <!-- Camera Capture -->
+      <div id="cameraContainer" style="display:none;">
+        <video id="video" autoplay playsinline></video>
+        <button id="btnCapture">Capture Photo</button>
+        <button id="btnCancelCapture">Cancel</button>
+      </div>
+      
+      <!-- File Upload -->
+      <div id="uploadContainer" style="display:none;">
+        <input type="file" id="fileInput" accept="image/*">
+      </div>
+      
+      <!-- Image URL -->
+      <div id="urlContainer" style="display:none;">
+        <input type="text" id="imageUrlInput" placeholder="Enter image URL">
+        <button id="btnLoadUrl">Load Image</button>
+      </div>
+      
+      <!-- Cropping UI -->
+      <div id="cropContainer" style="display:none;">
+        <div id="crop-area">
+          <img id="crop-image" src="" alt="Image to crop">
+          <!-- Optional overlay: shows the crop square boundaries -->
+          <div id="crop-overlay"></div>
+        </div>
+        <input type="range" id="zoomSlider" min="1" max="3" step="0.01" value="1">
+        <button id="btnCrop">Crop</button>
+        <button id="btnCancelCrop">Cancel</button>
+      </div>
+      
+      <!-- Preview UI -->
+      <div id="previewContainer" style="display:none;">
+        <h3>Preview Cropped Image</h3>
+        <img id="previewImage" src="" alt="Cropped Image">
+        <button id="btnAcceptPhoto">Accept</button>
+        <button id="btnRecrop">Recrop</button>
+        <button id="btnChangePhoto">Change Photo</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Step 3: Share Link -->
+  <div id="step3" class="step" style="display:none;">
+    <h2>Share Your Link</h2>
+    <p>Shortlink: <span id="shortLink">justshar.ing/xyz</span></p>
+    <textarea id="prefilledMessage" rows="6"></textarea>
+    <div id="shareOptions">
+      <button id="btnTextLink">Text Link</button>
+      <button id="btnEmailLink">Email Link</button>
+      <button id="btnTextEmailLink">Text & Email Link</button>
+      <button id="btnShowQr">Show QR Code</button>
+      <button id="btnCopyMessage">Copy Message</button>
+    </div>
+    <div id="qrContainer" style="display:none;">
+      <img src="https://justshar.ing/eheLM" alt="QR Code">
+      <button id="btnCloseQr">Close QR</button>
+    </div>
+  </div>
+  
+  <script src="start.js"></script>
+</body>
+</html>
