@@ -1,15 +1,9 @@
-// Utility function to switch steps
-function showStep(stepId) {
-  document.querySelectorAll('.step').forEach((el) => {
-    el.classList.remove('active');
-  });
-  document.getElementById(stepId).classList.add('active');
-}
-
-// Global variables to store state
+// Global variables
 let customerData = {};
 let originalImage = new Image(); // Holds the loaded image
 let croppedDataUrl = '';
+let cropper = null;  // Cropper.js instance
+let cameraStream = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form Next Button
@@ -76,20 +70,29 @@ document.addEventListener('DOMContentLoaded', () => {
     captureFromCamera();
   });
 
-  // Crop Button
+  // Crop Button: Use Cropper.js to get cropped image
   document.getElementById('cropButton').addEventListener('click', () => {
-    // For demo: crop the center square from the loaded image.
-    croppedDataUrl = cropImageCenter(originalImage);
-    // Show preview
-    document.getElementById('previewImage').src = croppedDataUrl;
-    hideAllPhotoSections();
-    document.getElementById('previewSection').style.display = 'block';
+    if (cropper) {
+      const croppedCanvas = cropper.getCroppedCanvas({
+        width: 1080,
+        height: 1080,
+        imageSmoothingQuality: 'high'
+      });
+      croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
+      cropper.destroy();
+      cropper = null;
+      // Show preview of cropped image
+      document.getElementById('previewImage').src = croppedDataUrl;
+      hideAllPhotoSections();
+      document.getElementById('previewSection').style.display = 'block';
+    }
   });
 
   // Recrop and Change Photo Buttons
   document.getElementById('recropFromPreview').addEventListener('click', () => {
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
+    initializeCropper(); // Reinitialize cropper on the same image
   });
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
   document.getElementById('changePhotoFromPreview').addEventListener('click', resetPhotoProcess);
@@ -114,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Message copied to clipboard.');
   });
 
-  // New Copy Link Button
+  // Copy Link Button in Step 3
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
     navigator.clipboard.writeText(linkText).then(() => {
@@ -137,6 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// Utility: Show step by id
+function showStep(stepId) {
+  document.querySelectorAll('.step').forEach((el) => {
+    el.classList.remove('active');
+  });
+  document.getElementById(stepId).classList.add('active');
+}
+
 // Hide all photo sections
 function hideAllPhotoSections() {
   document.querySelectorAll('.photo-section').forEach((section) => {
@@ -148,6 +159,10 @@ function hideAllPhotoSections() {
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
 }
@@ -160,7 +175,6 @@ function setupPrefilledMessage() {
 
 // --------------
 // Camera Functions
-let cameraStream = null;
 function startCamera() {
   const video = document.getElementById('cameraPreview');
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -183,7 +197,6 @@ function stopCamera() {
   }
 }
 
-// Capture current frame from camera
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   const canvas = document.createElement('canvas');
@@ -197,13 +210,14 @@ function captureFromCamera() {
 }
 
 // --------------
-// Load image into cropping section
+// Load image into cropping section and initialize Cropper.js
 function loadImageForCrop(src) {
   originalImage = new Image();
   originalImage.onload = () => {
     document.getElementById('cropImage').src = src;
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
+    initializeCropper();
   };
   originalImage.onerror = () => {
     alert('Failed to load image.');
@@ -211,23 +225,49 @@ function loadImageForCrop(src) {
   originalImage.src = src;
 }
 
-// Simple center crop function using canvas
-function cropImageCenter(image) {
-  const squareSize = Math.min(image.width, image.height);
-  const sx = (image.width - squareSize) / 2;
-  const sy = (image.height - squareSize) / 2;
-  const canvas = document.createElement('canvas');
-  canvas.width = squareSize;
-  canvas.height = squareSize;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(image, sx, sy, squareSize, squareSize, 0, 0, squareSize, squareSize);
-  return canvas.toDataURL('image/jpeg');
+// Initialize Cropper.js on the #cropImage element
+function initializeCropper() {
+  if (cropper) {
+    cropper.destroy();
+  }
+  const image = document.getElementById('cropImage');
+  cropper = new Cropper(image, {
+    aspectRatio: 1,
+    viewMode: 1,
+    movable: true,
+    zoomable: true,
+    rotatable: false,
+    scalable: false,
+    cropBoxResizable: false,
+    autoCropArea: 1,
+    responsive: true,
+    guides: false,
+    highlight: false,
+    background: false,
+    dragMode: 'move',
+    cropBoxMovable: false,
+    toggleDragModeOnDblclick: false,
+    ready: function () {
+      // Optionally, adjust initial zoom so the image fills the crop box
+      const imageData = cropper.getImageData();
+      const cropBoxData = cropper.getCropBoxData();
+      const ratio = Math.max(
+        cropBoxData.width / imageData.naturalWidth,
+        cropBoxData.height / imageData.naturalHeight
+      );
+      cropper.zoomTo(ratio);
+    }
+  });
 }
 
 // Reset all data for a fresh start
 function resetAll() {
   customerData = {};
   croppedDataUrl = '';
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
   document.getElementById('customerForm').reset();
   resetPhotoProcess();
   hideAllPhotoSections();

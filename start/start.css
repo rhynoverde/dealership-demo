@@ -97,6 +97,15 @@ button:active {
   background-color: #39843C;
 }
 
+/* Smaller copy link button for Step 3 */
+.copy-link-btn {
+  width: auto;
+  padding: 10px 20px;
+  font-size: 14px;
+  margin: 5px auto 15px;
+  display: block;
+}
+
 /* Photo Options */
 .photo-options {
   display: flex;
@@ -128,25 +137,14 @@ button:active {
 }
 
 #cameraContainer video,
-#cropContainer img {
+#cropContainer img,
+#previewImage {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* Fixed Square Overlay for Cropping */
-.crop-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  border: 2px solid #fff;
-  pointer-events: none;
 }
 
 /* Shortlink & Message in Step 3 */
@@ -157,28 +155,14 @@ button:active {
   text-align: center;
 }
 
-.shortlink-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
 .shortlink {
   background-color: #f9f9f9;
   padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 16px;
-  flex: 1;
+  margin-bottom: 15px;
   text-align: center;
-}
-
-.copy-btn {
-  flex: 0 0 auto;
-  padding: 12px 15px;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Prefilled message takes nearly full width */
