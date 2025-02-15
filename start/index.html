@@ -1,98 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dealership Demo Start</title>
-  <link rel="stylesheet" href="start.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dealership Demo</title>
+  <link rel="stylesheet" href="start.css" />
 </head>
 <body>
-  <!-- Step 1: Customer Info -->
-  <div id="step1" class="step">
-    <h2>Customer Info</h2>
-    <form id="customerForm">
-      <label for="customerName">Customer First Name:</label>
-      <input type="text" id="customerName" required>
-      
-      <label for="email">Email (optional):</label>
-      <input type="email" id="email">
-      
-      <label for="phone">Phone Number (optional but recommended):</label>
-      <input type="tel" id="phone">
-      
-      <button type="submit">Next</button>
-    </form>
-  </div>
-  
-  <!-- Step 2: Photo Options -->
-  <div id="step2" class="step" style="display:none;">
-    <h2>Vehicle Photo</h2>
-    <div id="photoMethodSelection">
-      <button id="btnTakePhoto">Take Photo</button>
-      <button id="btnUploadPhoto">Upload Photo</button>
-      <button id="btnImageUrl">Image URL</button>
+  <div class="container">
+    <!-- Header (optional logo can be added) -->
+    <div class="header">
+      <!-- Uncomment the next line and update the src if you have a logo -->
+      <!-- <img src="your-logo.png" alt="Dealership Logo" class="logo"> -->
+      <h1>Share Your Review Image</h1>
     </div>
-    
-    <div id="photoOptions" style="display:none;">
-      <!-- Camera Capture -->
-      <div id="cameraContainer" style="display:none;">
-        <video id="video" autoplay playsinline></video>
-        <button id="btnCapture">Capture Photo</button>
-        <button id="btnCancelCapture">Cancel</button>
+
+    <!-- Step 1: Customer Info -->
+    <section id="step1" class="step active">
+      <div class="form-section">
+        <h2>Customer Information</h2>
+        <form id="customerForm">
+          <label for="customerName">Customer Name</label>
+          <input type="text" id="customerName" name="customerName" placeholder="First Name" required />
+
+          <label for="customerEmail">Email (optional)</label>
+          <input type="email" id="customerEmail" name="customerEmail" placeholder="example@example.com" />
+
+          <label for="customerPhone">Phone Number (optional, recommended)</label>
+          <input type="tel" id="customerPhone" name="customerPhone" placeholder="(555) 555-5555" />
+
+          <button type="button" id="toStep2">Next</button>
+        </form>
       </div>
-      
-      <!-- File Upload -->
-      <div id="uploadContainer" style="display:none;">
-        <input type="file" id="fileInput" accept="image/*">
-      </div>
-      
-      <!-- Image URL -->
-      <div id="urlContainer" style="display:none;">
-        <input type="text" id="imageUrlInput" placeholder="Enter image URL">
-        <button id="btnLoadUrl">Load Image</button>
-      </div>
-      
-      <!-- Cropping UI -->
-      <div id="cropContainer" style="display:none;">
-        <div id="crop-area">
-          <img id="crop-image" src="" alt="Image to crop">
-          <!-- Optional overlay: shows the crop square boundaries -->
-          <div id="crop-overlay"></div>
+    </section>
+
+    <!-- Step 2: Photo Selection & Cropping -->
+    <section id="step2" class="step">
+      <div class="form-section">
+        <h2>Vehicle Photo</h2>
+        <div class="photo-options">
+          <button type="button" class="photo-option" data-option="take">Take Photo</button>
+          <button type="button" class="photo-option" data-option="upload">Upload Photo</button>
+          <button type="button" class="photo-option" data-option="url">Paste Image URL</button>
         </div>
-        <input type="range" id="zoomSlider" min="1" max="3" step="0.01" value="1">
-        <button id="btnCrop">Crop</button>
-        <button id="btnCancelCrop">Cancel</button>
+
+        <!-- Take Photo Section -->
+        <div id="takePhotoSection" class="photo-section" style="display:none;">
+          <p>Frame the vehicle in the square below. (Customer may or may not be in the shot.)</p>
+          <div id="cameraContainer">
+            <video id="cameraPreview" autoplay playsinline></video>
+            <div class="crop-overlay"></div>
+          </div>
+          <button type="button" id="capturePhoto">Capture Photo</button>
+          <button type="button" class="backToOptions">Back</button>
+        </div>
+
+        <!-- Upload Photo Section -->
+        <div id="uploadPhotoSection" class="photo-section" style="display:none;">
+          <p>Please choose a photo to upload:</p>
+          <label for="uploadInput" class="input-label">Select Photo</label>
+          <input type="file" id="uploadInput" accept="image/*" />
+          <button type="button" class="backToOptions">Back</button>
+        </div>
+
+        <!-- Paste URL Section -->
+        <div id="urlPhotoSection" class="photo-section" style="display:none;">
+          <p>Please enter the image URL:</p>
+          <label for="imageUrlInput" class="input-label">Image URL</label>
+          <input type="url" id="imageUrlInput" placeholder="https://example.com/photo.jpg" />
+          <button type="button" id="loadUrlImage">Load Image</button>
+          <button type="button" class="backToOptions">Back</button>
+        </div>
+
+        <!-- Cropping Section -->
+        <div id="cropSection" class="photo-section" style="display:none;">
+          <p>Adjust the photo inside the square. Pan/zoom (simulated) to select the best area.</p>
+          <div id="cropContainer">
+            <img id="cropImage" src="" alt="To be cropped" />
+            <div class="crop-overlay"></div>
+          </div>
+          <button type="button" id="cropButton">Crop</button>
+          <button type="button" id="changePhoto">Change Photo</button>
+        </div>
+
+        <!-- Preview Cropped Image Section -->
+        <div id="previewSection" class="photo-section" style="display:none;">
+          <p>Preview your cropped image:</p>
+          <img id="previewImage" src="" alt="Cropped Preview" />
+          <button type="button" id="confirmPhoto">Confirm Photo</button>
+          <button type="button" id="recropFromPreview">Recrop</button>
+          <button type="button" id="changePhotoFromPreview">Change Photo</button>
+        </div>
       </div>
-      
-      <!-- Preview UI -->
-      <div id="previewContainer" style="display:none;">
-        <h3>Preview Cropped Image</h3>
-        <img id="previewImage" src="" alt="Cropped Image">
-        <button id="btnAcceptPhoto">Accept</button>
-        <button id="btnRecrop">Recrop</button>
-        <button id="btnChangePhoto">Change Photo</button>
+    </section>
+
+    <!-- Step 3: Shortlink & Sharing -->
+    <section id="step3" class="step">
+      <div class="form-section">
+        <h2>Share the Link</h2>
+        <p class="shortlink-label">Your shortlink:</p>
+        <div class="shortlink-container">
+          <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
+          <button type="button" id="copyLink" class="copy-btn">Copy Link</button>
+        </div>
+        <p class="message-label">Prefilled Message:</p>
+        <textarea id="prefilledMessage" rows="6"></textarea>
+        <div class="share-buttons">
+          <button type="button" id="textLink">Text Link</button>
+          <button type="button" id="emailLink">Email Link</button>
+          <button type="button" id="bothLink">Text & Email</button>
+          <button type="button" id="showQR">Show QR Code</button>
+          <button type="button" id="copyMessage">Copy Message</button>
+        </div>
+        <div id="qrCode" style="display:none;" class="qr-container">
+          <p>Scan the QR Code:</p>
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=justshar.ing/xyz" alt="QR Code" />
+        </div>
+        <button type="button" id="startOver" class="start-over">Start Over</button>
       </div>
-    </div>
+    </section>
   </div>
-  
-  <!-- Step 3: Share Link -->
-  <div id="step3" class="step" style="display:none;">
-    <h2>Share Your Link</h2>
-    <p>Shortlink: <span id="shortLink">justshar.ing/xyz</span></p>
-    <textarea id="prefilledMessage" rows="6"></textarea>
-    <div id="shareOptions">
-      <button id="btnTextLink">Text Link</button>
-      <button id="btnEmailLink">Email Link</button>
-      <button id="btnTextEmailLink">Text & Email Link</button>
-      <button id="btnShowQr">Show QR Code</button>
-      <button id="btnCopyMessage">Copy Message</button>
-    </div>
-    <div id="qrContainer" style="display:none;">
-      <img src="https://justshar.ing/eheLM" alt="QR Code">
-      <button id="btnCloseQr">Close QR</button>
-    </div>
-  </div>
-  
+
   <script src="start.js"></script>
 </body>
 </html>
