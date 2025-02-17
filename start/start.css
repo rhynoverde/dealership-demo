@@ -160,7 +160,7 @@ button:active {
   object-fit: cover;
 }
 
-/* Camera container uses full width but similar ratio */
+/* Camera container */
 #cameraContainer {
   width: 100%;
   height: 300px;
@@ -177,7 +177,17 @@ button:active {
   object-fit: cover;
 }
 
-/* Preview container to display cropped image */
+/* Camera controls (zoom slider) */
+#cameraControls {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 5px;
+  border-radius: 4px;
+}
+
+/* Preview container */
 #previewContainer {
   width: 300px;
   height: 300px;
@@ -188,6 +198,27 @@ button:active {
 }
 
 #previewContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Final image section in Step 3 */
+.final-image-section {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+#finalImageContainer {
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 10px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#finalImageContainer img {
   width: 100%;
   height: 100%;
   object-fit: cover;

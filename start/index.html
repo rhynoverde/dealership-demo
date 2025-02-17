@@ -51,6 +51,11 @@
           <p>Frame the vehicle in the square below. (Customer may or may not be in the shot.)</p>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
+            <!-- Zoom controls (shown if supported) -->
+            <div id="cameraControls" style="display:none;">
+              <label for="zoomSlider">Zoom:</label>
+              <input type="range" id="zoomSlider" value="1">
+            </div>
           </div>
           <button type="button" id="capturePhoto">Capture Photo</button>
           <button type="button" class="backToOptions">Back</button>
@@ -105,6 +110,16 @@
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
         <!-- Smaller Copy Link button placed below the shortlink -->
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
+
+        <!-- Final Image Display with Change Button -->
+        <div class="final-image-section">
+          <p>Your chosen image:</p>
+          <div id="finalImageContainer">
+            <img id="finalImage" src="" alt="Final Image" />
+          </div>
+          <button type="button" id="changeFinalImage" class="change-final-btn">Change Image</button>
+        </div>
+
         <p class="message-label">Prefilled Message:</p>
         <textarea id="prefilledMessage" rows="6"></textarea>
         <div class="share-buttons">

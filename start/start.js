@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
       cropper.destroy();
       cropper = null;
-      // Show preview of cropped image in fixed container
+      // Show preview of cropped image in preview container
       document.getElementById('previewImage').src = croppedDataUrl;
       hideAllPhotoSections();
       document.getElementById('previewSection').style.display = 'block';
@@ -100,9 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Confirm photo and move to step 3
   document.getElementById('confirmPhoto').addEventListener('click', () => {
-    // Here you would upload the image if needed.
+    // Set final image src for display on step 3
+    document.getElementById('finalImage').src = croppedDataUrl;
     setupPrefilledMessage();
     showStep('step3');
+  });
+
+  // "Change Image" button on Step 3: send user back to Step 2 to choose a new image
+  document.getElementById('changeFinalImage').addEventListener('click', () => {
+    resetPhotoProcess();
+    showStep('step2');
   });
 
   // Step 3 Buttons
@@ -184,6 +191,22 @@ function startCamera() {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
+        // Check for zoom capability and set up slider if available
+        const [track] = stream.getVideoTracks();
+        const capabilities = track.getCapabilities();
+        const zoomSlider = document.getElementById('zoomSlider');
+        if (capabilities.zoom) {
+          zoomSlider.min = capabilities.zoom.min;
+          zoomSlider.max = capabilities.zoom.max;
+          zoomSlider.step = capabilities.zoom.step || 0.1;
+          zoomSlider.value = track.getSettings().zoom || capabilities.zoom.min;
+          document.getElementById('cameraControls').style.display = 'block';
+          zoomSlider.addEventListener('input', () => {
+            track.applyConstraints({ advanced: [{ zoom: zoomSlider.value }] });
+          });
+        } else {
+          document.getElementById('cameraControls').style.display = 'none';
+        }
       })
       .catch((err) => {
         alert('Camera access denied or not available.');
