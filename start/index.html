@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Disable user scaling so pinch gestures are used for our custom zoom -->
+  <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Dealership Demo</title>
   <link rel="stylesheet" href="start.css" />
@@ -13,7 +13,7 @@
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <!-- Optional logo: Uncomment and update src if needed -->
+      <!-- Optional logo -->
       <!-- <img src="your-logo.png" alt="Dealership Logo" class="logo"> -->
       <h1>Share Your Review Image</h1>
     </div>
@@ -25,10 +25,13 @@
         <form id="customerForm">
           <label for="customerName">Customer Name</label>
           <input type="text" id="customerName" name="customerName" placeholder="First Name" required />
+
           <label for="customerEmail">Email (optional)</label>
           <input type="email" id="customerEmail" name="customerEmail" placeholder="example@example.com" />
+
           <label for="customerPhone">Phone Number (optional, recommended)</label>
           <input type="tel" id="customerPhone" name="customerPhone" placeholder="(555) 555-5555" />
+
           <button type="button" id="toStep2">Next</button>
         </form>
       </div>
@@ -47,15 +50,26 @@
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
           <p>Frame the vehicle in the square below.<br>
-             <small>Pinch inside the square to zoom. Toggle flash if needed.</small></p>
+             <small>Pinch inside the square to zoom. Use flash if needed.</small></p>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
+            <!-- Overlay: centered square "hole" with dimmed edges -->
             <div id="cameraOverlay">
               <div class="hole"></div>
             </div>
           </div>
           <div class="camera-buttons">
             <button type="button" id="capturePhoto">Capture Photo</button>
+            <!-- New Camera Toggle -->
+            <div id="cameraToggleContainer" class="camera-toggle">
+              <span class="camera-icon">📷</span>
+              <label for="cameraToggle" class="toggle-label-left">Rear</label>
+              <label class="switch">
+                <input type="checkbox" id="cameraToggle">
+                <span class="slider round"></span>
+              </label>
+              <label for="cameraToggle" class="toggle-label-right">Front</label>
+            </div>
             <div id="flashToggleContainer">
               <label class="switch">
                 <input type="checkbox" id="flashToggle">
@@ -107,7 +121,7 @@
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
 
-        <!-- Final Image Display with Adjust & Change Buttons -->
+        <!-- Final Image Display -->
         <div class="final-image-section">
           <p>Your chosen image:</p>
           <div id="finalImageContainer">

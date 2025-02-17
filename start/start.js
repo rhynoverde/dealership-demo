@@ -1,13 +1,14 @@
 // Global variables
 let customerData = {};
-let capturedDataUrl = "";  // Full captured image from camera/upload/url
-let croppedDataUrl = "";   // Cropped image (auto-cropped or via Cropper.js)
+let capturedDataUrl = "";  // Full-frame captured image (or uploaded/pasted)
+let croppedDataUrl = "";   // Final square image (auto-cropped or via Cropper)
 let cropper = null;        // Cropper.js instance
 let cameraStream = null;
-let activePointers = new Map();  // For custom pinch-to-zoom
+let activePointers = new Map(); // For custom pinch-to-zoom
+let currentCamera = "environment"; // "environment" for rear, "user" for front
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Step 1: Customer Info
+  // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
     if (!name) {
@@ -21,8 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Photo Option Buttons
-  document.querySelectorAll('.photo-option').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+  document.querySelectorAll('.photo-option').forEach(btn => {
+    btn.addEventListener('click', e => {
       const option = e.currentTarget.getAttribute('data-option');
       hideAllPhotoSections();
       if (option === 'take') {
@@ -36,20 +37,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Back Buttons
-  document.querySelectorAll('.backToOptions').forEach((btn) => {
+  // Back buttons
+  document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
       stopCamera();
       hideAllPhotoSections();
     });
   });
 
-  // Handle Upload
-  document.getElementById('uploadInput').addEventListener('change', (e) => {
+  // File Upload
+  document.getElementById('uploadInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         capturedDataUrl = ev.target.result;
         autoCropCapturedImage(capturedDataUrl);
       };
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Handle URL input
+  // URL Input
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) {
@@ -68,13 +69,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Capture Photo from Camera
+  // Capture Photo Button
   document.getElementById('capturePhoto').addEventListener('click', () => {
     captureFromCamera();
   });
 
-  // Flash Toggle (switch)
-  document.getElementById('flashToggle').addEventListener('change', (e) => {
+  // Camera Toggle using checkbox
+  document.getElementById('cameraToggle').addEventListener('change', (e) => {
+    currentCamera = e.target.checked ? "user" : "environment";
+    stopCamera();
+    startCamera();
+  });
+
+  // Flash Toggle (handled via checkbox)
+  document.getElementById('flashToggle').addEventListener('change', e => {
     if (cameraStream) {
       const [track] = cameraStream.getVideoTracks();
       if (track.getCapabilities().torch) {
@@ -83,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Section Buttons
+  // Cropping Page: Crop Button
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas({
@@ -94,12 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
       croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
       cropper.destroy();
       cropper = null;
-      document.getElementById('previewImage').src = croppedDataUrl;
+      // Set final image in step3
+      document.getElementById('finalImage').src = croppedDataUrl;
       hideAllPhotoSections();
-      document.getElementById('previewSection').style.display = 'block';
+      showStep('step3');
     }
   });
 
+  // Cropping Page: Fit Entire Image Button
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     if (cropper) {
       const srcCanvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
@@ -118,28 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const dy = (size - imgH) / 2;
       ctx.drawImage(srcCanvas, dx, dy, imgW, imgH);
       croppedDataUrl = canvas.toDataURL('image/jpeg');
-      document.getElementById('previewImage').src = croppedDataUrl;
+      document.getElementById('finalImage').src = croppedDataUrl;
       hideAllPhotoSections();
-      document.getElementById('previewSection').style.display = 'block';
+      showStep('step3');
     }
   });
 
-  document.getElementById('recropFromPreview').addEventListener('click', () => {
-    hideAllPhotoSections();
-    document.getElementById('cropSection').style.display = 'block';
-    initializeCropper();
-  });
+  // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
-  document.getElementById('changePhotoFromPreview').addEventListener('click', resetPhotoProcess);
 
-  // Confirm Photo: Set final image and go to final page
-  document.getElementById('confirmPhoto').addEventListener('click', () => {
-    document.getElementById('finalImage').src = croppedDataUrl;
-    setupPrefilledMessage();
-    showStep('step3');
-  });
-
-  // Final Page Buttons
+  // Final Page: Adjust Cropping Button
   document.getElementById('adjustCropping').addEventListener('click', () => {
     document.getElementById('cropImage').src = capturedDataUrl;
     hideAllPhotoSections();
@@ -147,11 +145,24 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCropper();
     showStep('step2');
   });
+
+  // Final Page: Change Photo Button
   document.getElementById('changeFinalImage').addEventListener('click', () => {
     resetPhotoProcess();
     showStep('step2');
   });
 
+  // Final Page: Share Buttons
+  document.getElementById('showQR').addEventListener('click', () => {
+    const qr = document.getElementById('qrCode');
+    qr.style.display = (qr.style.display === 'none' ? 'block' : 'none');
+  });
+  document.getElementById('copyMessage').addEventListener('click', () => {
+    const msg = document.getElementById('prefilledMessage');
+    msg.select();
+    document.execCommand('copy');
+    alert('Message copied to clipboard.');
+  });
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
     navigator.clipboard.writeText(linkText).then(() => {
@@ -167,36 +178,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bothLink').addEventListener('click', () => {
     alert('Simulating sending text and email.');
   });
-  document.getElementById('showQR').addEventListener('click', () => {
-    const qr = document.getElementById('qrCode');
-    qr.style.display = qr.style.display === 'none' ? 'block' : 'none';
-  });
-  document.getElementById('copyMessage').addEventListener('click', () => {
-    const msg = document.getElementById('prefilledMessage');
-    msg.select();
-    document.execCommand('copy');
-    alert('Message copied to clipboard.');
-  });
   document.getElementById('startOver').addEventListener('click', () => {
     resetAll();
     showStep('step1');
   });
 });
 
-// Utility: Show a step
+// Utility: Show step
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
 }
 
-// Utility: Hide all photo sections
+// Hide all photo sections
 function hideAllPhotoSections() {
-  document.querySelectorAll('.photo-section').forEach(section => {
-    section.style.display = 'none';
-  });
+  document.querySelectorAll('.photo-section').forEach(section => section.style.display = 'none');
 }
 
-// Reset photo flow
+// Reset photo selection
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
@@ -210,21 +209,24 @@ function resetPhotoProcess() {
   document.getElementById('imageUrlInput').value = '';
 }
 
-// Setup prefilled message
+// Setup prefilled message on final page
 function setupPrefilledMessage() {
   const msgTemplate = `${customerData.name},\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nToby\nDemo Auto Sales`;
   document.getElementById('prefilledMessage').value = msgTemplate;
+  // Also set the final image if not already set
+  document.getElementById('finalImage').src = croppedDataUrl;
 }
 
-// --- Camera Functions ---
+// --------------
+// Camera Functions
 
-// Custom pinch-to-zoom using pointer events on the video element
+// Custom pinch-to-zoom using pointer events on video
 function initPinchZoom(video, track) {
   activePointers.clear();
   let initialDistance = 0;
   let initialZoom = track.getSettings().zoom || 1;
   
-  video.addEventListener('pointerdown', (e) => {
+  video.addEventListener('pointerdown', e => {
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.size === 2) {
       const points = Array.from(activePointers.values());
@@ -233,7 +235,7 @@ function initPinchZoom(video, track) {
     }
   });
   
-  video.addEventListener('pointermove', (e) => {
+  video.addEventListener('pointermove', e => {
     if (activePointers.has(e.pointerId)) {
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (activePointers.size === 2) {
@@ -250,15 +252,15 @@ function initPinchZoom(video, track) {
     }
   });
   
-  video.addEventListener('pointerup', (e) => activePointers.delete(e.pointerId));
-  video.addEventListener('pointercancel', (e) => activePointers.delete(e.pointerId));
+  video.addEventListener('pointerup', e => { activePointers.delete(e.pointerId); });
+  video.addEventListener('pointercancel', e => { activePointers.delete(e.pointerId); });
 }
 
 function startCamera() {
   const video = document.getElementById('cameraPreview');
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then((stream) => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
+      .then(stream => {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
@@ -268,7 +270,7 @@ function startCamera() {
           initPinchZoom(video, track);
         }
       })
-      .catch((err) => {
+      .catch(err => {
         alert('Camera access denied or not available.');
       });
   }
@@ -288,8 +290,7 @@ function captureFromCamera() {
   fullCanvas.height = video.videoHeight;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
-  // Calculate crop from the fixed overlay:
-  // The camera container is 400x400; overlay "hole" is 300x300 centered.
+  // Our container is 400x400 with a centered 300x300 hole.
   const containerSize = 400;
   const holeSize = 300;
   const scale = fullCanvas.width / containerSize;
@@ -301,14 +302,16 @@ function captureFromCamera() {
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(fullCanvas, offset, offset, cropSize, cropSize, 0, 0, cropSize, cropSize);
   capturedDataUrl = cropCanvas.toDataURL('image/jpeg');
-  croppedDataUrl = capturedDataUrl;
+  croppedDataUrl = capturedDataUrl; // Initially use auto-cropped image
   stopCamera();
-  // Go directly to final page with auto-cropped image
   document.getElementById('finalImage').src = croppedDataUrl;
+  setupPrefilledMessage();
   showStep('step3');
 }
 
-// --- Cropping Functions ---
+// --------------
+// Cropping Functions
+
 function loadImageForCrop(src) {
   capturedDataUrl = src;
   document.getElementById('cropImage').src = src;
@@ -318,9 +321,7 @@ function loadImageForCrop(src) {
 }
 
 function initializeCropper() {
-  if (cropper) {
-    cropper.destroy();
-  }
+  if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
   cropper = new Cropper(image, {
     aspectRatio: 1,
@@ -347,7 +348,6 @@ function initializeCropper() {
   });
 }
 
-// Auto-crop function for upload/url: use same calculations as captureFromCamera.
 function autoCropCapturedImage(src) {
   const tempImage = new Image();
   tempImage.onload = () => {
@@ -364,20 +364,19 @@ function autoCropCapturedImage(src) {
     capturedDataUrl = src;
     croppedDataUrl = canvas.toDataURL('image/jpeg');
     document.getElementById('finalImage').src = croppedDataUrl;
+    setupPrefilledMessage();
     showStep('step3');
   };
   tempImage.src = src;
 }
 
-// Reset everything
+// --------------
+// Reset
 function resetAll() {
   customerData = {};
   capturedDataUrl = "";
   croppedDataUrl = "";
-  if (cropper) {
-    cropper.destroy();
-    cropper = null;
-  }
+  if (cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('customerForm').reset();
   resetPhotoProcess();
   hideAllPhotoSections();

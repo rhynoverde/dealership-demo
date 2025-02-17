@@ -9,9 +9,8 @@ body {
   background-color: #f4f4f4;
   font-family: 'Helvetica Neue', Arial, sans-serif;
   color: #333;
-  /* Restrict default pinch-to-zoom on page */
   -ms-touch-action: none;
-  touch-action: none;
+  touch-action: none; /* Disable default page pinch zoom */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -27,22 +26,15 @@ body {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 /* Header */
 .header {
   text-align: center;
   padding: 20px;
-  background-color: #fff;
   border-bottom: 1px solid #ddd;
 }
-
-.logo {
-  max-width: 150px;
-  margin-bottom: 10px;
-}
-
 .header h1 {
   font-size: 22px;
   color: #000;
@@ -52,7 +44,6 @@ body {
 .form-section {
   padding: 20px;
 }
-
 h2 {
   font-size: 20px;
   margin-bottom: 15px;
@@ -66,7 +57,6 @@ form label,
   margin-bottom: 5px;
   font-weight: bold;
 }
-
 form input,
 form textarea,
 #imageUrlInput {
@@ -78,12 +68,9 @@ form textarea,
   font-size: 16px;
 }
 
-/* Hide native file input */
-#uploadInput {
-  display: none;
-}
-
-/* Styled file input label */
+/* Hide file input */
+#uploadInput { display: none; }
+/* Styled file label */
 .upload-label {
   background-color: #4CAF50;
   color: #fff;
@@ -108,16 +95,8 @@ button {
   margin-bottom: 15px;
   transition: background-color 0.3s ease;
 }
-
-button:hover {
-  background-color: #45A049;
-}
-
-button:active {
-  background-color: #39843C;
-}
-
-/* Smaller copy link button */
+button:hover { background-color: #45A049; }
+button:active { background-color: #39843C; }
 .copy-link-btn {
   width: auto;
   padding: 10px 20px;
@@ -132,7 +111,6 @@ button:active {
   justify-content: space-between;
   margin-bottom: 15px;
 }
-
 .photo-options button {
   flex: 1;
   margin: 0 5px;
@@ -141,43 +119,35 @@ button:active {
 }
 
 /* Photo Section Styling */
-.photo-section {
-  margin-top: 15px;
-}
+.photo-section { margin-top: 15px; }
 
 /* Camera Container */
 #cameraContainer {
   position: relative;
   width: 400px;
   height: 400px;
-  margin: 0 auto 15px auto;
+  margin: 0 auto 15px;
   background: #000;
   border: 2px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
 }
-
-/* Video fills container and disables default touch zoom */
 #cameraContainer video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   touch-action: none;
 }
-
-/* Camera Overlay: full container with centered square "hole" */
+/* Camera Overlay: centered square hole */
 #cameraOverlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   pointer-events: none;
 }
 #cameraOverlay .hole {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 50%; left: 50%;
   width: 300px;
   height: 300px;
   transform: translate(-50%, -50%);
@@ -189,11 +159,28 @@ button:active {
 /* Camera Buttons */
 .camera-buttons {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 5px;
 }
 
-/* Flash Toggle as Switch */
+/* Camera Toggle Container */
+#cameraToggleContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+#cameraToggleContainer .camera-icon {
+  font-size: 20px;
+}
+#cameraToggleContainer .toggle-label-left,
+#cameraToggleContainer .toggle-label-right {
+  font-size: 14px;
+}
+
+/* Flash Toggle Switch */
 #flashToggleContainer {
   display: flex;
   align-items: center;
@@ -205,18 +192,11 @@ button:active {
   width: 40px;
   height: 24px;
 }
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+.switch input { opacity: 0; width: 0; height: 0; }
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #ccc;
   transition: .4s;
   border-radius: 24px;
@@ -232,21 +212,15 @@ button:active {
   transition: .4s;
   border-radius: 50%;
 }
-input:checked + .slider {
-  background-color: #4CAF50;
-}
-input:checked + .slider:before {
-  transform: translateX(16px);
-}
-.toggle-label {
-  font-size: 14px;
-}
+input:checked + .slider { background-color: #4CAF50; }
+input:checked + .slider:before { transform: translateX(16px); }
+.toggle-label { font-size: 14px; }
 
-/* Crop Container (square) */
+/* Crop Container */
 #cropContainer {
   width: 300px;
   height: 300px;
-  margin: 0 auto 15px auto;
+  margin: 0 auto 15px;
   border: 2px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
@@ -257,7 +231,6 @@ input:checked + .slider:before {
   height: 100%;
   object-fit: cover;
 }
-
 /* Crop Buttons */
 .crop-buttons {
   display: flex;
@@ -269,7 +242,7 @@ input:checked + .slider:before {
 #previewContainer {
   width: 300px;
   height: 300px;
-  margin: 0 auto 15px auto;
+  margin: 0 auto 15px;
   border: 2px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
@@ -304,7 +277,7 @@ input:checked + .slider:before {
   gap: 5px;
 }
 
-/* Shortlink & Message in Final Page */
+/* Shortlink & Message */
 .shortlink-label,
 .message-label {
   font-weight: bold;
@@ -320,12 +293,7 @@ input:checked + .slider:before {
   text-align: center;
   font-size: 16px;
 }
-
-/* Prefilled Message */
-textarea {
-  resize: none;
-  width: 100%;
-}
+textarea { resize: none; width: 100%; }
 
 /* Share Buttons */
 .share-buttons {
@@ -341,37 +309,19 @@ textarea {
 }
 
 /* QR Code Container */
-.qr-container {
-  text-align: center;
-  margin-bottom: 15px;
-}
+.qr-container { text-align: center; margin-bottom: 15px; }
 
 /* Start Over Button */
-.start-over {
-  background-color: #555;
-}
-.start-over:hover {
-  background-color: #444;
-}
+.start-over { background-color: #555; }
+.start-over:hover { background-color: #444; }
 
-/* Steps Visibility */
-.step {
-  display: none;
-}
-.step.active {
-  display: block;
-}
+/* Steps */
+.step { display: none; }
+.step.active { display: block; }
 
 /* Responsive Adjustments */
 @media (max-width: 480px) {
-  .header h1 {
-    font-size: 20px;
-  }
-  h2 {
-    font-size: 18px;
-  }
-  button {
-    font-size: 14px;
-    padding: 12px;
-  }
+  .header h1 { font-size: 20px; }
+  h2 { font-size: 18px; }
+  button { font-size: 14px; padding: 12px; }
 }
