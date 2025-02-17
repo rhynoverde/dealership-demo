@@ -57,18 +57,19 @@
             <div id="cameraOverlay">
               <div class="hole"></div>
             </div>
+            <!-- Zoom Indicator (shown during pinch-zoom) -->
+            <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
           </div>
           <div class="camera-buttons">
             <button type="button" id="capturePhoto">Capture Photo</button>
-            <!-- New Camera Toggle -->
+            <!-- Camera Toggle -->
             <div id="cameraToggleContainer" class="camera-toggle">
-              <span class="camera-icon">📷</span>
-              <label for="cameraToggle" class="toggle-label-left">Rear</label>
+              <label for="cameraToggle" class="toggle-label-left">Rear 📷</label>
               <label class="switch">
                 <input type="checkbox" id="cameraToggle">
                 <span class="slider round"></span>
               </label>
-              <label for="cameraToggle" class="toggle-label-right">Front</label>
+              <label for="cameraToggle" class="toggle-label-right">Front 📷</label>
             </div>
             <div id="flashToggleContainer">
               <label class="switch">

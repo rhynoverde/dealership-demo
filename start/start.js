@@ -1,8 +1,9 @@
 // Global variables
 let customerData = {};
-let capturedDataUrl = "";  // Full-frame captured image (or uploaded/pasted)
-let croppedDataUrl = "";   // Final square image (auto-cropped or via Cropper)
-let cropper = null;        // Cropper.js instance
+let capturedDataUrl = "";       // Will hold the auto-cropped image (for final display)
+let originalCapturedDataUrl = ""; // Holds the original full-resolution image for recropping
+let croppedDataUrl = "";        // Final square image (after crop adjustments)
+let cropper = null;             // Cropper.js instance
 let cameraStream = null;
 let activePointers = new Map(); // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
@@ -51,8 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (file) {
       const reader = new FileReader();
       reader.onload = ev => {
-        capturedDataUrl = ev.target.result;
-        autoCropCapturedImage(capturedDataUrl);
+        // For uploaded images, save the original for recropping.
+        originalCapturedDataUrl = ev.target.result;
+        autoCropCapturedImage(ev.target.result);
       };
       reader.readAsDataURL(file);
     }
@@ -62,8 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) {
-      capturedDataUrl = url;
-      autoCropCapturedImage(capturedDataUrl);
+      // For URL images, treat the URL as the original.
+      originalCapturedDataUrl = url;
+      autoCropCapturedImage(url);
     } else {
       alert('Please enter a valid URL.');
     }
@@ -139,7 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Final Page: Adjust Cropping Button
   document.getElementById('adjustCropping').addEventListener('click', () => {
-    document.getElementById('cropImage').src = capturedDataUrl;
+    // Use the original image (if available) so that you can recrop the full photo.
+    document.getElementById('cropImage').src = originalCapturedDataUrl || capturedDataUrl;
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
     initializeCropper();
@@ -204,6 +208,7 @@ function resetPhotoProcess() {
     cropper = null;
   }
   capturedDataUrl = "";
+  originalCapturedDataUrl = "";
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -220,12 +225,13 @@ function setupPrefilledMessage() {
 // --------------
 // Camera Functions
 
-// Custom pinch-to-zoom using pointer events on video
+// Custom pinch-to-zoom using pointer events on video with a zoom indicator
 function initPinchZoom(video, track) {
   activePointers.clear();
   let initialDistance = 0;
   let initialZoom = track.getSettings().zoom || 1;
-  
+  const zoomIndicator = document.getElementById('zoomIndicator');
+
   video.addEventListener('pointerdown', e => {
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.size === 2) {
@@ -248,12 +254,25 @@ function initPinchZoom(video, track) {
           newZoom = Math.max(capabilities.zoom.min, Math.min(newZoom, capabilities.zoom.max));
           track.applyConstraints({ advanced: [{ zoom: newZoom }] });
         }
+        // Show zoom indicator with message based on zoom direction
+        zoomIndicator.style.display = "block";
+        zoomIndicator.innerText = ratio > 1 ? "Zooming In..." : "Zooming Out...";
       }
     }
   });
   
-  video.addEventListener('pointerup', e => { activePointers.delete(e.pointerId); });
-  video.addEventListener('pointercancel', e => { activePointers.delete(e.pointerId); });
+  video.addEventListener('pointerup', e => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) {
+      zoomIndicator.style.display = "none";
+    }
+  });
+  video.addEventListener('pointercancel', e => {
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2) {
+      zoomIndicator.style.display = "none";
+    }
+  });
 }
 
 function startCamera() {
@@ -290,6 +309,8 @@ function captureFromCamera() {
   fullCanvas.height = video.videoHeight;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
+  // Save the original full image for later recropping.
+  originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
   // Our container is 400x400 with a centered 300x300 hole.
   const containerSize = 400;
   const holeSize = 300;
@@ -313,7 +334,8 @@ function captureFromCamera() {
 // Cropping Functions
 
 function loadImageForCrop(src) {
-  capturedDataUrl = src;
+  // When manually loading an image for cropping.
+  originalCapturedDataUrl = src;
   document.getElementById('cropImage').src = src;
   hideAllPhotoSections();
   document.getElementById('cropSection').style.display = 'block';
@@ -363,8 +385,8 @@ function autoCropCapturedImage(src) {
     ctx.drawImage(tempImage, offset, offset, cropSize, cropSize, 0, 0, cropSize, cropSize);
     capturedDataUrl = src;
     croppedDataUrl = canvas.toDataURL('image/jpeg');
-    document.getElementById('finalImage').src = croppedDataUrl;
     setupPrefilledMessage();
+    document.getElementById('finalImage').src = croppedDataUrl;
     showStep('step3');
   };
   tempImage.src = src;
@@ -375,6 +397,7 @@ function autoCropCapturedImage(src) {
 function resetAll() {
   customerData = {};
   capturedDataUrl = "";
+  originalCapturedDataUrl = "";
   croppedDataUrl = "";
   if (cropper) { cropper.destroy(); cropper = null; }
   document.getElementById('customerForm').reset();
