@@ -9,8 +9,9 @@ body {
   background-color: #f4f4f4;
   font-family: 'Helvetica Neue', Arial, sans-serif;
   color: #333;
+  /* Restrict default pinch-to-zoom on page */
   -ms-touch-action: none;
-  touch-action: none; /* Disable default pinch zoom on page */
+  touch-action: none;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -18,7 +19,7 @@ body {
   min-height: 100vh;
 }
 
-/* Container limited to mobile size */
+/* Container */
 .container {
   background-color: #fff;
   border-radius: 8px;
@@ -77,12 +78,12 @@ form textarea,
   font-size: 16px;
 }
 
-/* Hide the actual file input */
+/* Hide native file input */
 #uploadInput {
   display: none;
 }
 
-/* Styled label for file input */
+/* Styled file input label */
 .upload-label {
   background-color: #4CAF50;
   color: #fff;
@@ -116,7 +117,7 @@ button:active {
   background-color: #39843C;
 }
 
-/* Smaller copy link button for Step 3 */
+/* Smaller copy link button */
 .copy-link-btn {
   width: auto;
   padding: 10px 20px;
@@ -144,7 +145,7 @@ button:active {
   margin-top: 15px;
 }
 
-/* Camera Container: larger than the crop square */
+/* Camera Container */
 #cameraContainer {
   position: relative;
   width: 400px;
@@ -156,7 +157,7 @@ button:active {
   overflow: hidden;
 }
 
-/* Video fills container and disable default touch actions */
+/* Video fills container and disables default touch zoom */
 #cameraContainer video {
   width: 100%;
   height: 100%;
@@ -164,7 +165,7 @@ button:active {
   touch-action: none;
 }
 
-/* Camera overlay: full container with a centered square hole */
+/* Camera Overlay: full container with centered square "hole" */
 #cameraOverlay {
   position: absolute;
   top: 0;
@@ -185,14 +186,14 @@ button:active {
   box-sizing: border-box;
 }
 
-/* Camera buttons container */
+/* Camera Buttons */
 .camera-buttons {
   display: flex;
   justify-content: space-between;
   gap: 5px;
 }
 
-/* Flash toggle styled as a switch */
+/* Flash Toggle as Switch */
 #flashToggleContainer {
   display: flex;
   align-items: center;
@@ -257,7 +258,7 @@ input:checked + .slider:before {
   object-fit: cover;
 }
 
-/* Crop buttons container */
+/* Crop Buttons */
 .crop-buttons {
   display: flex;
   justify-content: space-between;
@@ -279,7 +280,7 @@ input:checked + .slider:before {
   object-fit: cover;
 }
 
-/* Final Image Section in Step 3 */
+/* Final Image Section */
 .final-image-section {
   text-align: center;
   margin-bottom: 15px;
@@ -303,7 +304,7 @@ input:checked + .slider:before {
   gap: 5px;
 }
 
-/* Shortlink & Message in Step 3 */
+/* Shortlink & Message in Final Page */
 .shortlink-label,
 .message-label {
   font-weight: bold;
@@ -320,13 +321,13 @@ input:checked + .slider:before {
   font-size: 16px;
 }
 
-/* Prefilled message takes full width */
+/* Prefilled Message */
 textarea {
   resize: none;
   width: 100%;
 }
 
-/* Share Buttons Grid */
+/* Share Buttons */
 .share-buttons {
   display: flex;
   flex-wrap: wrap;

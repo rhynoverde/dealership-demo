@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- Prevent default pinch-to-zoom on the page -->
+  <!-- Disable user scaling so pinch gestures are used for our custom zoom -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Dealership Demo</title>
   <link rel="stylesheet" href="start.css" />
@@ -11,9 +11,9 @@
 </head>
 <body>
   <div class="container">
-    <!-- Header (optional logo can be added) -->
+    <!-- Header -->
     <div class="header">
-      <!-- Uncomment and update if you have a logo -->
+      <!-- Optional logo: Uncomment and update src if needed -->
       <!-- <img src="your-logo.png" alt="Dealership Logo" class="logo"> -->
       <h1>Share Your Review Image</h1>
     </div>
@@ -25,13 +25,10 @@
         <form id="customerForm">
           <label for="customerName">Customer Name</label>
           <input type="text" id="customerName" name="customerName" placeholder="First Name" required />
-
           <label for="customerEmail">Email (optional)</label>
           <input type="email" id="customerEmail" name="customerEmail" placeholder="example@example.com" />
-
           <label for="customerPhone">Phone Number (optional, recommended)</label>
           <input type="tel" id="customerPhone" name="customerPhone" placeholder="(555) 555-5555" />
-
           <button type="button" id="toStep2">Next</button>
         </form>
       </div>
@@ -87,7 +84,7 @@
           <button type="button" class="backToOptions">Back</button>
         </div>
 
-        <!-- Cropping Section (for Adjust Cropping only) -->
+        <!-- Cropping Section (for Adjust Cropping) -->
         <div id="cropSection" class="photo-section" style="display:none;">
           <p>Adjust the photo inside the square. Pinch to zoom and pan to frame your vehicle.</p>
           <div id="cropContainer">
@@ -99,9 +96,6 @@
             <button type="button" id="changePhoto">Change Photo</button>
           </div>
         </div>
-
-        <!-- Final Page from Capture: Directly show cropped image -->
-        <!-- (We now bypass the separate cropping page on capture) -->
       </div>
     </section>
 
@@ -113,7 +107,7 @@
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
 
-        <!-- Final Image Display with Adjust/Change Buttons -->
+        <!-- Final Image Display with Adjust & Change Buttons -->
         <div class="final-image-section">
           <p>Your chosen image:</p>
           <div id="finalImageContainer">
