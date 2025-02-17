@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Crop Button: Use Cropper.js to get cropped image
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
+      // Get high-res cropped canvas
       const croppedCanvas = cropper.getCroppedCanvas({
         width: 1080,
         height: 1080,
@@ -81,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
       cropper.destroy();
       cropper = null;
-      // Show preview of cropped image
+      // Show preview of cropped image in fixed container
       document.getElementById('previewImage').src = croppedDataUrl;
       hideAllPhotoSections();
       document.getElementById('previewSection').style.display = 'block';
@@ -248,14 +249,11 @@ function initializeCropper() {
     cropBoxMovable: false,
     toggleDragModeOnDblclick: false,
     ready: function () {
-      // Optionally, adjust initial zoom so the image fills the crop box
+      // Adjust initial zoom so the image fills the fixed crop container
       const imageData = cropper.getImageData();
-      const cropBoxData = cropper.getCropBoxData();
-      const ratio = Math.max(
-        cropBoxData.width / imageData.naturalWidth,
-        cropBoxData.height / imageData.naturalHeight
-      );
-      cropper.zoomTo(ratio);
+      const containerData = cropper.getContainerData();
+      const scale = Math.max(containerData.width / imageData.naturalWidth, containerData.height / imageData.naturalHeight);
+      cropper.zoomTo(scale);
     }
   });
 }

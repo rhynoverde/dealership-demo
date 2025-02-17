@@ -12,7 +12,7 @@
   <div class="container">
     <!-- Header (optional logo can be added) -->
     <div class="header">
-      <!-- Uncomment the next line and update the src if you have a logo -->
+      <!-- Uncomment and update if you have a logo -->
       <!-- <img src="your-logo.png" alt="Dealership Logo" class="logo"> -->
       <h1>Share Your Review Image</h1>
     </div>
@@ -51,7 +51,6 @@
           <p>Frame the vehicle in the square below. (Customer may or may not be in the shot.)</p>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
-            <!-- You can optionally include an overlay here if desired -->
           </div>
           <button type="button" id="capturePhoto">Capture Photo</button>
           <button type="button" class="backToOptions">Back</button>
@@ -60,8 +59,9 @@
         <!-- Upload Photo Section -->
         <div id="uploadPhotoSection" class="photo-section" style="display:none;">
           <p>Please choose a photo to upload:</p>
-          <label for="uploadInput" class="input-label">Select Photo</label>
+          <!-- Hidden file input with styled label -->
           <input type="file" id="uploadInput" accept="image/*" />
+          <label for="uploadInput" class="upload-label">Select Photo</label>
           <button type="button" class="backToOptions">Back</button>
         </div>
 
@@ -87,7 +87,9 @@
         <!-- Preview Cropped Image Section -->
         <div id="previewSection" class="photo-section" style="display:none;">
           <p>Preview your cropped image:</p>
-          <img id="previewImage" src="" alt="Cropped Preview" />
+          <div id="previewContainer">
+            <img id="previewImage" src="" alt="Cropped Preview" />
+          </div>
           <button type="button" id="confirmPhoto">Confirm Photo</button>
           <button type="button" id="recropFromPreview">Recrop</button>
           <button type="button" id="changePhotoFromPreview">Change Photo</button>
@@ -101,7 +103,7 @@
         <h2>Share the Link</h2>
         <p class="shortlink-label">Your shortlink:</p>
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
-        <!-- Smaller copy link button below the shortlink -->
+        <!-- Smaller Copy Link button placed below the shortlink -->
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
         <p class="message-label">Prefilled Message:</p>
         <textarea id="prefilledMessage" rows="6"></textarea>
