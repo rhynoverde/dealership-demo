@@ -70,6 +70,21 @@ document.addEventListener('DOMContentLoaded', () => {
     captureFromCamera();
   });
 
+  // Toggle flash button
+  document.getElementById('toggleFlash').addEventListener('click', () => {
+    // Try to toggle torch if supported
+    if (cameraStream) {
+      const [track] = cameraStream.getVideoTracks();
+      const capabilities = track.getCapabilities();
+      if (capabilities.torch) {
+        const current = track.getSettings().torch || false;
+        track.applyConstraints({ advanced: [{ torch: !current }] });
+      } else {
+        alert('Flash/torch not supported on this device.');
+      }
+    }
+  });
+
   // Crop Button: Use Cropper.js to get cropped image
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
@@ -83,6 +98,42 @@ document.addEventListener('DOMContentLoaded', () => {
       cropper.destroy();
       cropper = null;
       // Show preview of cropped image in preview container
+      document.getElementById('previewImage').src = croppedDataUrl;
+      hideAllPhotoSections();
+      document.getElementById('previewSection').style.display = 'block';
+    }
+  });
+
+  // Fit Entire Image Button: Create a square canvas that contains the entire image with blurred edges
+  document.getElementById('fitEntireButton').addEventListener('click', () => {
+    if (cropper) {
+      // Get current cropped canvas from cropper (it may not cover the entire image)
+      const srcCanvas = cropper.getCroppedCanvas({
+        imageSmoothingQuality: 'high'
+      });
+      // Create a new square canvas
+      const size = 1080;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw a blurred version of the source to fill background
+      ctx.filter = 'blur(20px)';
+      ctx.drawImage(srcCanvas, 0, 0, size, size);
+      ctx.filter = 'none';
+      
+      // Calculate scale to fit entire source image in the square
+      const scale = Math.min(size / srcCanvas.width, size / srcCanvas.height);
+      const imgW = srcCanvas.width * scale;
+      const imgH = srcCanvas.height * scale;
+      const dx = (size - imgW) / 2;
+      const dy = (size - imgH) / 2;
+      // Draw the original image (without blur) on top, centered
+      ctx.drawImage(srcCanvas, dx, dy, imgW, imgH);
+      
+      croppedDataUrl = canvas.toDataURL('image/jpeg');
+      // Show preview of fitted image
       document.getElementById('previewImage').src = croppedDataUrl;
       hideAllPhotoSections();
       document.getElementById('previewSection').style.display = 'block';
@@ -191,22 +242,8 @@ function startCamera() {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
-        // Check for zoom capability and set up slider if available
-        const [track] = stream.getVideoTracks();
-        const capabilities = track.getCapabilities();
-        const zoomSlider = document.getElementById('zoomSlider');
-        if (capabilities.zoom) {
-          zoomSlider.min = capabilities.zoom.min;
-          zoomSlider.max = capabilities.zoom.max;
-          zoomSlider.step = capabilities.zoom.step || 0.1;
-          zoomSlider.value = track.getSettings().zoom || capabilities.zoom.min;
-          document.getElementById('cameraControls').style.display = 'block';
-          zoomSlider.addEventListener('input', () => {
-            track.applyConstraints({ advanced: [{ zoom: zoomSlider.value }] });
-          });
-        } else {
-          document.getElementById('cameraControls').style.display = 'none';
-        }
+        // Hide zoom slider in favor of pinch gestures.
+        // The square overlay is visible to guide framing.
       })
       .catch((err) => {
         alert('Camera access denied or not available.');
@@ -224,6 +261,7 @@ function stopCamera() {
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   const canvas = document.createElement('canvas');
+  // Use the video dimensions to capture
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
