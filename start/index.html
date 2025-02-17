@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Prevent default pinch-to-zoom on the page -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Dealership Demo</title>
   <link rel="stylesheet" href="start.css" />
   <!-- Include Cropper.js CSS -->
@@ -36,7 +37,7 @@
       </div>
     </section>
 
-    <!-- Step 2: Photo Selection & Cropping -->
+    <!-- Step 2: Photo Selection & Capture -->
     <section id="step2" class="step">
       <div class="form-section">
         <h2>Vehicle Photo</h2>
@@ -49,15 +50,22 @@
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
           <p>Frame the vehicle in the square below.<br>
-             <small>Pinch inside photo to zoom. Use flash if needed.</small></p>
+             <small>Pinch inside the square to zoom. Toggle flash if needed.</small></p>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
-            <!-- Fixed square overlay -->
-            <div id="cameraOverlay"></div>
+            <div id="cameraOverlay">
+              <div class="hole"></div>
+            </div>
           </div>
           <div class="camera-buttons">
             <button type="button" id="capturePhoto">Capture Photo</button>
-            <button type="button" id="toggleFlash">Toggle Flash</button>
+            <div id="flashToggleContainer">
+              <label class="switch">
+                <input type="checkbox" id="flashToggle">
+                <span class="slider"></span>
+              </label>
+              <span class="toggle-label">Flash</span>
+            </div>
             <button type="button" class="backToOptions">Back</button>
           </div>
         </div>
@@ -65,7 +73,6 @@
         <!-- Upload Photo Section -->
         <div id="uploadPhotoSection" class="photo-section" style="display:none;">
           <p>Please choose a photo to upload:</p>
-          <!-- Hidden file input with styled label -->
           <input type="file" id="uploadInput" accept="image/*" />
           <label for="uploadInput" class="upload-label">Select Photo</label>
           <button type="button" class="backToOptions">Back</button>
@@ -80,7 +87,7 @@
           <button type="button" class="backToOptions">Back</button>
         </div>
 
-        <!-- Cropping Section -->
+        <!-- Cropping Section (for Adjust Cropping only) -->
         <div id="cropSection" class="photo-section" style="display:none;">
           <p>Adjust the photo inside the square. Pinch to zoom and pan to frame your vehicle.</p>
           <div id="cropContainer">
@@ -93,37 +100,29 @@
           </div>
         </div>
 
-        <!-- Preview Cropped Image Section -->
-        <div id="previewSection" class="photo-section" style="display:none;">
-          <p>Preview your cropped image:</p>
-          <div id="previewContainer">
-            <img id="previewImage" src="" alt="Cropped Preview" />
-          </div>
-          <div class="crop-buttons">
-            <button type="button" id="confirmPhoto">Confirm Photo</button>
-            <button type="button" id="recropFromPreview">Recrop</button>
-            <button type="button" id="changePhotoFromPreview">Change Photo</button>
-          </div>
-        </div>
+        <!-- Final Page from Capture: Directly show cropped image -->
+        <!-- (We now bypass the separate cropping page on capture) -->
       </div>
     </section>
 
-    <!-- Step 3: Shortlink & Sharing -->
+    <!-- Step 3: Final Image & Sharing -->
     <section id="step3" class="step">
       <div class="form-section">
         <h2>Share the Link</h2>
         <p class="shortlink-label">Your shortlink:</p>
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
-        <!-- Smaller Copy Link button placed below the shortlink -->
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
 
-        <!-- Final Image Display with Change Button -->
+        <!-- Final Image Display with Adjust/Change Buttons -->
         <div class="final-image-section">
           <p>Your chosen image:</p>
           <div id="finalImageContainer">
             <img id="finalImage" src="" alt="Final Image" />
           </div>
-          <button type="button" id="changeFinalImage" class="change-final-btn">Change Image</button>
+          <div class="final-buttons">
+            <button type="button" id="adjustCropping" class="adjust-cropping-btn">Adjust Cropping</button>
+            <button type="button" id="changeFinalImage" class="change-final-btn">Change Photo</button>
+          </div>
         </div>
 
         <p class="message-label">Prefilled Message:</p>
