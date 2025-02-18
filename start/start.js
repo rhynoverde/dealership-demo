@@ -1,12 +1,13 @@
 // Global variables
 let customerData = {};
-let capturedDataUrl = "";         // Holds the auto-cropped image (for final display from camera)
-let originalCapturedDataUrl = ""; // Holds the original full-resolution image (for recropping)
+let capturedDataUrl = "";         // For camera-taken auto-cropped image (final display)
+let originalCapturedDataUrl = ""; // For the full-resolution original (for recropping)
 let croppedDataUrl = "";          // Final square image (after crop adjustments)
 let cropper = null;               // Cropper.js instance
 let cameraStream = null;
 let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
+let maxZoom = 1;                  // Maximum allowed zoom (computed per image)
 
 document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form
@@ -46,21 +47,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // File Upload – now go to crop page (for uploaded images)
+  // File Upload – for uploaded images, load into crop page
   document.getElementById('uploadInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = ev => {
         originalCapturedDataUrl = ev.target.result;
-        // Instead of auto-cropping immediately, load image into cropper for adjustment
         loadImageForCrop(ev.target.result);
       };
       reader.readAsDataURL(file);
     }
   });
 
-  // URL Input – now go to crop page
+  // URL Input – for URL images, load into crop page
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) {
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Capture Photo Button (camera-taken photos auto-crop)
+  // Capture Photo Button – camera-taken photos auto-crop
   document.getElementById('capturePhoto').addEventListener('click', () => {
     captureFromCamera();
   });
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Page: Crop Button (when user manually crops)
+  // Cropping Page: Crop Button – user’s manual crop
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas({
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Page: Fit Entire Image Button (with blurred edge fill)
+  // Cropping Page: Fit Entire Image Button – generate final image with blurred fill
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
     img.onload = () => {
@@ -120,17 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
       canvas.height = size;
       const ctx = canvas.getContext('2d');
 
-      // Draw blurred background using "cover" scale (max scale)
+      // Draw blurred background (using a higher blur for a more diffused effect)
       const scaleCover = Math.max(size / img.width, size / img.height);
       const coverWidth = img.width * scaleCover;
       const coverHeight = img.height * scaleCover;
       const coverDx = (size - coverWidth) / 2;
       const coverDy = (size - coverHeight) / 2;
-      ctx.filter = 'blur(20px)';
+      ctx.filter = 'blur(40px)';
       ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
       ctx.filter = 'none';
 
-      // Draw the full image using "contain" scale (min scale)
+      // Draw the full image using "contain" scale so that one or two sides might not fill the crop box
       const scaleFit = Math.min(size / img.width, size / img.height);
       const fitWidth = img.width * scaleFit;
       const fitHeight = img.height * scaleFit;
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – reloads original image into cropper
+  // Final Page: Adjust Cropping Button – reload original image into cropper
   document.getElementById('adjustCropping').addEventListener('click', () => {
     document.getElementById('cropImage').src = originalCapturedDataUrl || capturedDataUrl;
     hideAllPhotoSections();
@@ -317,7 +317,7 @@ function captureFromCamera() {
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
   // Save the original full image for later recropping.
   originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
-  // Crop out the center square from the container (400x400 with centered 300x300 hole)
+  // Auto-crop the center square (container: 400x400 with centered 300x300 hole)
   const containerSize = 400;
   const holeSize = 300;
   const scale = fullCanvas.width / containerSize;
@@ -348,30 +348,46 @@ function loadImageForCrop(src) {
   initializeCropper();
 }
 
-// Initialize Cropper.js with a configuration that lets you zoom out freely
+// Initialize Cropper.js with a configuration that lets you zoom out freely and restricts maximum zoom
 function initializeCropper() {
   if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
   cropper = new Cropper(image, {
     aspectRatio: 1,
-    viewMode: 0,           // allow free positioning and zooming
+    viewMode: 0,
     movable: true,
     zoomable: true,
     rotatable: false,
     scalable: false,
     cropBoxResizable: false,
-    autoCropArea: 0.8,     // start with 80% of the image
+    autoCropArea: 0.8,
     responsive: true,
     guides: false,
     highlight: false,
     background: false,
     dragMode: 'move',
     cropBoxMovable: false,
-    toggleDragModeOnDblclick: false
+    toggleDragModeOnDblclick: false,
+    ready: function () {
+      // Compute maxZoom: if the image is taller than wide, limit zoom so that image width equals crop box width, and vice versa.
+      const imageData = cropper.getImageData();
+      const cropBoxData = cropper.getCropBoxData();
+      const cropSize = cropBoxData.width; // crop box is square
+      if (imageData.naturalWidth < imageData.naturalHeight) {
+        maxZoom = cropSize / imageData.naturalWidth;
+      } else {
+        maxZoom = cropSize / imageData.naturalHeight;
+      }
+    },
+    zoom: function(e) {
+      if (e.detail.ratio > maxZoom) {
+        cropper.zoomTo(maxZoom);
+      }
+    }
   });
 }
 
-// For camera-taken photos we still auto-crop (this function is unchanged)
+// For camera-taken photos we still auto-crop
 function autoCropCapturedImage(src) {
   const tempImage = new Image();
   tempImage.onload = () => {

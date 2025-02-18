@@ -244,7 +244,7 @@ input:checked + .slider:before { transform: translateX(16px); }
 #cropImage {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Allow image not to fill if zoomed out */
+  object-fit: contain; /* Allow image not to fully fill if zoomed out */
 }
 /* Crop Buttons */
 .crop-buttons {
