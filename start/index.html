@@ -4,17 +4,16 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo</title>
+  <title>Dealership Demo - Version 1.2</title>
   <link rel="stylesheet" href="start.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
 </head>
 <body>
+  <div class="version-banner">Version 1.2</div>
   <div class="container">
     <!-- Header -->
     <div class="header">
-      <!-- Optional logo -->
-      <!-- <img src="your-logo.png" alt="Dealership Logo" class="logo"> -->
       <h1>Share Your Review Image</h1>
     </div>
 
@@ -57,7 +56,7 @@
             <div id="cameraOverlay">
               <div class="hole"></div>
             </div>
-            <!-- Zoom Indicator (shown during pinch-zoom) -->
+            <!-- Zoom Indicator -->
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
           </div>
           <div class="camera-buttons">
@@ -99,7 +98,7 @@
           <button type="button" class="backToOptions">Back</button>
         </div>
 
-        <!-- Cropping Section (for Adjust Cropping) -->
+        <!-- Cropping Section -->
         <div id="cropSection" class="photo-section" style="display:none;">
           <p>Adjust the photo inside the square. Pinch to zoom and pan to frame your vehicle.</p>
           <div id="cropContainer">
@@ -143,7 +142,7 @@
           <button type="button" id="showQR">Show QR Code</button>
           <button type="button" id="copyMessage">Copy Message</button>
         </div>
-        <div id="qrCode" style="display:none;" class="qr-container">
+        <div id="qrCode" class="qr-container" style="display:none;">
           <p>Scan the QR Code:</p>
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=justshar.ing/xyz" alt="QR Code" />
         </div>
