@@ -9,7 +9,7 @@ let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
 let maxZoom = 1;                  // Maximum allowed zoom (computed per image in crop mode)
 
-// Helper: SVG-based blur function for devices lacking canvas.filter support (e.g. iOS)
+// Helper: SVG-based blur fallback (for devices like iOS)
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -28,6 +28,9 @@ function getBlurredDataURL(img, blurAmount, width, height, callback) {
   };
   blurredImg.src = url;
 }
+
+// Detect iOS device
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form
@@ -91,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Capture Photo Button – for camera images auto-crop
+  // Capture Photo Button – auto-crop camera images
   document.getElementById('capturePhoto').addEventListener('click', () => {
     captureFromCamera();
   });
@@ -152,17 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
 
-      // Use canvas filter if available; otherwise use SVG blur workaround
-      if ('filter' in ctx) {
-        ctx.filter = 'blur(40px)';
-        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-        ctx.filter = 'none';
-        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-        croppedDataUrl = canvas.toDataURL('image/jpeg');
-        document.getElementById('finalImage').src = croppedDataUrl;
-        hideAllPhotoSections();
-        showStep('step3');
-      } else {
+      // For iOS or if canvas.filter is unavailable, use the SVG fallback.
+      if (isIOS || !('filter' in ctx)) {
         getBlurredDataURL(img, 40, size, size, (blurredImg) => {
           ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
           ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
@@ -171,6 +165,15 @@ document.addEventListener('DOMContentLoaded', () => {
           hideAllPhotoSections();
           showStep('step3');
         });
+      } else {
+        ctx.filter = 'blur(40px)';
+        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
+        ctx.filter = 'none';
+        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+        croppedDataUrl = canvas.toDataURL('image/jpeg');
+        document.getElementById('finalImage').src = croppedDataUrl;
+        hideAllPhotoSections();
+        showStep('step3');
       }
     };
     img.src = originalCapturedDataUrl || capturedDataUrl;
@@ -343,7 +346,7 @@ function captureFromCamera() {
   fullCanvas.height = video.videoHeight;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
-  // Use centered square crop based on the shorter dimension
+  // Use a centered square crop based on the shorter dimension
   const minDim = Math.min(fullCanvas.width, fullCanvas.height);
   const offsetX = (fullCanvas.width - minDim) / 2;
   const offsetY = (fullCanvas.height - minDim) / 2;
@@ -393,17 +396,15 @@ function initializeCropper() {
     ready: function () {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
-      // For maximum zoom: limit so that the image’s shorter side exactly aligns with the crop box.
+      // Limit zoom so that the image's shorter side (width if portrait, height if landscape)
+      // cannot be zoomed in beyond filling the crop box.
       if (imageData.naturalWidth < imageData.naturalHeight) {
-         // Portrait: shorter side is width.
          maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
-         // Landscape: shorter side is height.
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
     },
     zoom: function(e) {
-      // Prevent zooming in beyond the point where the image’s shorter side aligns with the crop box.
       if (e.detail.ratio > maxZoom) {
          cropper.zoomTo(maxZoom);
       }
