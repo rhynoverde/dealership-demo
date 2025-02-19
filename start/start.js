@@ -7,6 +7,7 @@ let cropper = null;               // Cropper.js instance
 let cameraStream = null;
 let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
+let currentScale = 1;             // Our CSS-based scale (used for pinch zoom)
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
 
 // Detect iOS device
@@ -251,10 +252,11 @@ function setupPrefilledMessage() {
 
 // Camera Functions
 
-function initPinchZoom(video, track) {
+// Updated pinch zoom now uses CSS scale rather than camera track constraints
+function initPinchZoom(video) {
   activePointers.clear();
   let initialDistance = 0;
-  let initialZoom = track.getSettings().zoom || 1;
+  let initialScale = currentScale;
   const zoomIndicator = document.getElementById('zoomIndicator');
 
   video.addEventListener('pointerdown', e => {
@@ -263,10 +265,10 @@ function initPinchZoom(video, track) {
     if (activePointers.size === 2) {
       const points = Array.from(activePointers.values());
       initialDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-      initialZoom = track.getSettings().zoom || 1;
+      initialScale = currentScale;
     }
   });
-  
+
   video.addEventListener('pointermove', e => {
     e.preventDefault();
     if (activePointers.has(e.pointerId)) {
@@ -275,18 +277,17 @@ function initPinchZoom(video, track) {
         const points = Array.from(activePointers.values());
         const newDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
         const ratio = newDistance / initialDistance;
-        let newZoom = initialZoom * ratio;
-        const capabilities = track.getCapabilities();
-        if (capabilities.zoom) {
-          newZoom = Math.max(capabilities.zoom.min, Math.min(newZoom, capabilities.zoom.max));
-          track.applyConstraints({ advanced: [{ zoom: newZoom }] });
-        }
+        let newScale = initialScale * ratio;
+        // Optionally, constrain newScale (e.g., between 1 and 3)
+        // newScale = Math.max(1, Math.min(newScale, 3));
+        currentScale = newScale;
+        video.style.transform = `scale(${newScale})`;
         zoomIndicator.style.display = "block";
         zoomIndicator.innerText = ratio > 1 ? "Zooming In..." : "Zooming Out...";
       }
     }
   });
-  
+
   video.addEventListener('pointerup', e => {
     e.preventDefault();
     activePointers.delete(e.pointerId);
@@ -305,17 +306,17 @@ function initPinchZoom(video, track) {
 
 function startCamera() {
   const video = document.getElementById('cameraPreview');
+  // Reset scale when starting camera
+  currentScale = 1;
+  video.style.transform = `scale(${currentScale})`;
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
       .then(stream => {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
-        const [track] = stream.getVideoTracks();
-        const capabilities = track.getCapabilities();
-        if (capabilities.zoom) { 
-          initPinchZoom(video, track); 
-        }
+        // Use our CSS-based pinch zoom instead of track constraints
+        initPinchZoom(video);
       })
       .catch(err => { 
         alert('Camera access denied or not available.'); 
