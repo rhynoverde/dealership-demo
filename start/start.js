@@ -258,6 +258,7 @@ function initPinchZoom(video, track) {
   const zoomIndicator = document.getElementById('zoomIndicator');
 
   video.addEventListener('pointerdown', e => {
+    e.preventDefault();
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.size === 2) {
       const points = Array.from(activePointers.values());
@@ -267,6 +268,7 @@ function initPinchZoom(video, track) {
   });
   
   video.addEventListener('pointermove', e => {
+    e.preventDefault();
     if (activePointers.has(e.pointerId)) {
       activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       if (activePointers.size === 2) {
@@ -286,12 +288,14 @@ function initPinchZoom(video, track) {
   });
   
   video.addEventListener('pointerup', e => {
+    e.preventDefault();
     activePointers.delete(e.pointerId);
     if (activePointers.size < 2) { 
       zoomIndicator.style.display = "none"; 
     }
   });
   video.addEventListener('pointercancel', e => {
+    e.preventDefault();
     activePointers.delete(e.pointerId);
     if (activePointers.size < 2) { 
       zoomIndicator.style.display = "none"; 
