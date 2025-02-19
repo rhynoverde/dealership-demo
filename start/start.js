@@ -9,34 +9,25 @@ let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
 
-// Helper: SVG-based blur fallback (for non-iOS devices if needed)
-function getBlurredDataURL(img, blurAmount, width, height, callback) {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-      <filter id="blurFilter">
-        <feGaussianBlur stdDeviation="${blurAmount}" />
-      </filter>
-      <image filter="url(#blurFilter)" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" xlink:href="${img.src}" />
-    </svg>
-  `;
-  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(svgBlob);
-  const blurredImg = new Image();
-  blurredImg.onload = function() {
-    URL.revokeObjectURL(url);
-    callback(blurredImg);
-  };
-  blurredImg.src = url;
-}
-
 // Detect iOS device
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 document.addEventListener('DOMContentLoaded', () => {
+  // If the device is iOS, hide the "Fit Entire Image" button since it's problematic
+  if (isIOS) {
+    const fitBtn = document.getElementById('fitEntireButton');
+    if (fitBtn) {
+      fitBtn.style.display = 'none';
+    }
+  }
+
   // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
-    if (!name) { alert('Please enter the customer name.'); return; }
+    if (!name) { 
+      alert('Please enter the customer name.'); 
+      return; 
+    }
     customerData.name = name;
     customerData.email = document.getElementById('customerEmail').value.trim();
     customerData.phone = document.getElementById('customerPhone').value.trim();
@@ -61,7 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Back buttons
   document.querySelectorAll('.backToOptions').forEach(btn => {
-    btn.addEventListener('click', () => { stopCamera(); hideAllPhotoSections(); });
+    btn.addEventListener('click', () => { 
+      stopCamera(); 
+      hideAllPhotoSections(); 
+    });
   });
 
   // File Upload – load image into crop mode
@@ -80,12 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // URL Input – load image URL into crop mode
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
-    if (url) { originalCapturedDataUrl = url; loadImageForCrop(url); }
-    else { alert('Please enter a valid URL.'); }
+    if (url) { 
+      originalCapturedDataUrl = url; 
+      loadImageForCrop(url); 
+    } else { 
+      alert('Please enter a valid URL.'); 
+    }
   });
 
   // Capture Photo Button – auto-crop camera images
-  document.getElementById('capturePhoto').addEventListener('click', () => { captureFromCamera(); });
+  document.getElementById('capturePhoto').addEventListener('click', () => { 
+    captureFromCamera(); 
+  });
 
   // Camera Toggle
   document.getElementById('cameraToggle').addEventListener('change', (e) => {
@@ -107,7 +107,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Crop Button – manual crop action
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
-      const croppedCanvas = cropper.getCroppedCanvas({ width: 1080, height: 1080, imageSmoothingQuality: 'high' });
+      const croppedCanvas = cropper.getCroppedCanvas({ 
+        width: 1080, 
+        height: 1080, 
+        imageSmoothingQuality: 'high' 
+      });
       croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
       cropper.destroy();
       cropper = null;
@@ -117,117 +121,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Function to create a blurred background using CSS (for iOS)
-  function createBlurredBackgroundCSS(img, container) {
-    const blurContainer = document.createElement('div');
-    blurContainer.className = 'blur-container';
-    blurContainer.style.backgroundImage = `url(${img.src})`;
-    container.appendChild(blurContainer);
-
-    const imageContainer = document.createElement('div');
-    imageContainer.className = 'image-container';
-    imageContainer.style.backgroundImage = `url(${img.src})`;
-    container.appendChild(imageContainer);
-  }
-
-  // Cropping Page: Fit Entire Image Button – generate final image with blurred fill
+  // Note: The "Fit Entire Image" button is only active on non-iOS devices.
+  // If running on iOS, the button is hidden (see above).
   document.getElementById('fitEntireButton').addEventListener('click', () => {
+    // This handler will only be reached on non-iOS devices.
     const img = new Image();
     img.onload = () => {
       const size = 1080;
-      // Create a container div for compositing the result
-      const container = document.createElement('div');
-      container.style.width = size + 'px';
-      container.style.height = size + 'px';
-      container.style.position = 'relative';
-      container.style.overflow = 'hidden';
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
 
-      if (isIOS) {
-        // Use CSS-based blur for iOS
-        createBlurredBackgroundCSS(img, container);
-      } else if (!('filter' in document.createElement('canvas').getContext('2d'))) {
-        // Fallback: if canvas filter is unsupported, use SVG fallback
-        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
-          const canvas = document.createElement('canvas');
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(blurredImg, 0, 0, size, size);
-          container.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg')})`;
-        });
-      } else {
-        // For non-iOS devices with canvas filter support, we can use the canvas method
-        const canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        ctx.filter = 'blur(40px)';
-        ctx.drawImage(img, 0, 0, size, size);
-        ctx.filter = 'none';
-        // Set the blurred image as background of the container
-        container.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg')})`;
-        container.style.backgroundSize = 'cover';
-        container.style.backgroundPosition = 'center';
-      }
+      const scaleCover = Math.max(size / img.width, size / img.height);
+      const coverWidth = img.width * scaleCover;
+      const coverHeight = img.height * scaleCover;
+      const coverDx = (size - coverWidth) / 2;
+      const coverDy = (size - coverHeight) / 2;
 
-      // Calculate dimensions for the contained image (fit entirely)
       const scaleFit = Math.min(size / img.width, size / img.height);
       const fitWidth = img.width * scaleFit;
       const fitHeight = img.height * scaleFit;
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
 
-      // Create the main image element (to overlay on top)
-      const image = document.createElement('img');
-      image.src = img.src;
-      image.style.position = 'absolute';
-      image.style.left = fitDx + 'px';
-      image.style.top = fitDy + 'px';
-      image.style.width = fitWidth + 'px';
-      image.style.height = fitHeight + 'px';
-      image.style.zIndex = 1;
-      container.appendChild(image);
-
-      // Append the container temporarily to the body so we can capture its image
-      container.style.position = 'absolute';
-      container.style.top = '-9999px';
-      document.body.appendChild(container);
-
-      // Convert the container into a canvas using html2canvas or a similar method.
-      // For this example, we simply draw the image over the blurred background using canvas.
-      // (Note: In production you might use html2canvas to capture complex DOM nodes.)
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = size;
-      finalCanvas.height = size;
-      const finalCtx = finalCanvas.getContext('2d');
-
-      // For iOS, if using CSS method, we simulate by drawing the blurred background then the image.
-      if (isIOS) {
-        // Draw the blurred background (from the container's computed background image)
-        const computedBg = window.getComputedStyle(container).backgroundImage;
-        const bgUrl = computedBg.slice(5, -2);
-        const bgImg = new Image();
-        bgImg.onload = () => {
-          finalCtx.drawImage(bgImg, 0, 0, size, size);
-          finalCtx.drawImage(image, fitDx, fitDy, fitWidth, fitHeight);
-          croppedDataUrl = finalCanvas.toDataURL('image/jpeg');
-          document.getElementById('finalImage').src = croppedDataUrl;
-          document.body.removeChild(container);
-          hideAllPhotoSections();
-          showStep('step3');
-        };
-        bgImg.src = bgUrl;
+      // Use canvas filter or fallback if available
+      if ('filter' in ctx) {
+        ctx.filter = 'blur(40px)';
+        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
+        ctx.filter = 'none';
+        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
       } else {
-        // For other devices, simply draw the contained image over the background.
-        // (Assuming the container background is set already.)
-        // Here we re-draw the contained image.
-        finalCtx.drawImage(image, fitDx, fitDy, fitWidth, fitHeight);
-        croppedDataUrl = finalCanvas.toDataURL('image/jpeg');
-        document.getElementById('finalImage').src = croppedDataUrl;
-        document.body.removeChild(container);
-        hideAllPhotoSections();
-        showStep('step3');
+        // Fallback using SVG-based blur
+        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
+          ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
+          ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+        });
       }
+      croppedDataUrl = canvas.toDataURL('image/jpeg');
+      document.getElementById('finalImage').src = croppedDataUrl;
+      hideAllPhotoSections();
+      showStep('step3');
     };
     img.src = originalCapturedDataUrl || capturedDataUrl;
   });
@@ -263,12 +197,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
-    navigator.clipboard.writeText(linkText).then(() => { alert('Link copied to clipboard.'); });
+    navigator.clipboard.writeText(linkText).then(() => { 
+      alert('Link copied to clipboard.');
+    });
   });
-  document.getElementById('textLink').addEventListener('click', () => { alert('Simulating sending a text message.'); });
-  document.getElementById('emailLink').addEventListener('click', () => { alert('Simulating sending an email.'); });
-  document.getElementById('bothLink').addEventListener('click', () => { alert('Simulating sending text and email.'); });
-  document.getElementById('startOver').addEventListener('click', () => { resetAll(); showStep('step1'); });
+  document.getElementById('textLink').addEventListener('click', () => { 
+    alert('Simulating sending a text message.');
+  });
+  document.getElementById('emailLink').addEventListener('click', () => { 
+    alert('Simulating sending an email.');
+  });
+  document.getElementById('bothLink').addEventListener('click', () => { 
+    alert('Simulating sending text and email.');
+  });
+  document.getElementById('startOver').addEventListener('click', () => { 
+    resetAll();
+    showStep('step1');
+  });
 });
 
 // Utility: Show step
@@ -286,7 +231,10 @@ function hideAllPhotoSections() {
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
-  if (cropper) { cropper.destroy(); cropper = null; }
+  if (cropper) { 
+    cropper.destroy();
+    cropper = null;
+  }
   capturedDataUrl = "";
   originalCapturedDataUrl = "";
   croppedDataUrl = "";
@@ -339,11 +287,15 @@ function initPinchZoom(video, track) {
   
   video.addEventListener('pointerup', e => {
     activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { zoomIndicator.style.display = "none"; }
+    if (activePointers.size < 2) { 
+      zoomIndicator.style.display = "none"; 
+    }
   });
   video.addEventListener('pointercancel', e => {
     activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { zoomIndicator.style.display = "none"; }
+    if (activePointers.size < 2) { 
+      zoomIndicator.style.display = "none"; 
+    }
   });
 }
 
@@ -357,9 +309,13 @@ function startCamera() {
         video.play();
         const [track] = stream.getVideoTracks();
         const capabilities = track.getCapabilities();
-        if (capabilities.zoom) { initPinchZoom(video, track); }
+        if (capabilities.zoom) { 
+          initPinchZoom(video, track); 
+        }
       })
-      .catch(err => { alert('Camera access denied or not available.'); });
+      .catch(err => { 
+        alert('Camera access denied or not available.'); 
+      });
   }
 }
 
@@ -406,7 +362,9 @@ function loadImageForCrop(src) {
 }
 
 function initializeCropper() {
-  if (cropper) { cropper.destroy(); }
+  if (cropper) { 
+    cropper.destroy(); 
+  }
   const image = document.getElementById('cropImage');
   cropper = new Cropper(image, {
     aspectRatio: 1,
@@ -435,7 +393,9 @@ function initializeCropper() {
       }
     },
     zoom: function(e) {
-      if (e.detail.ratio > maxZoom) { cropper.zoomTo(maxZoom); }
+      if (e.detail.ratio > maxZoom) { 
+        cropper.zoomTo(maxZoom); 
+      }
     }
   });
 }
@@ -467,7 +427,10 @@ function resetAll() {
   capturedDataUrl = "";
   originalCapturedDataUrl = "";
   croppedDataUrl = "";
-  if (cropper) { cropper.destroy(); cropper = null; }
+  if (cropper) { 
+    cropper.destroy(); 
+    cropper = null;
+  }
   document.getElementById('customerForm').reset();
   resetPhotoProcess();
   hideAllPhotoSections();
