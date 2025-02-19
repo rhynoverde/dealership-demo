@@ -9,7 +9,7 @@ let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
 
-// Helper: SVG-based blur fallback (if needed)
+// Helper: SVG-based blur fallback (for non-iOS devices if needed)
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -29,103 +29,10 @@ function getBlurredDataURL(img, blurAmount, width, height, callback) {
   blurredImg.src = url;
 }
 
-// Helper: Minimal StackBlur implementation (adapted from open-source StackBlur)
-function stackBlurCanvasRGBA(canvas, top_x, top_y, width, height, radius) {
-  if (isNaN(radius) || radius < 1) return;
-  radius |= 0;
-  const context = canvas.getContext("2d");
-  let imageData;
-  try {
-    imageData = context.getImageData(top_x, top_y, width, height);
-  } catch(e) {
-    console.error(e);
-    return;
-  }
-  const pixels = imageData.data;
-  const div = radius + radius + 1;
-  const w4 = width << 2;
-  let r, g, b, a, x, y, i, p, yp, yi, yw;
-  const mul_sum =  (div+1) >> 1;
-  const shg_sum = 1; // simplified for small radius
-  let r_sum, g_sum, b_sum, a_sum, r_out_sum, g_out_sum, b_out_sum, a_out_sum, r_in_sum, g_in_sum, b_in_sum, a_in_sum;
-  let pr, pg, pb, pa, rbs;
-  const stack = [];
-  for(i = 0; i < div; i++){
-    stack[i] = { r:0, g:0, b:0, a:0 };
-  }
-  yw = yi = 0;
-  for (y = 0; y < height; y++) {
-    r_sum = g_sum = b_sum = a_sum = r_in_sum = g_in_sum = b_in_sum = a_in_sum = 0;
-    r_out_sum = g_out_sum = b_out_sum = a_out_sum = 0;
-    for(i = 0; i < div; i++){
-      p = yi + ((Math.min(i, width - 1)) << 2);
-      const sir = stack[i];
-      sir.r = pixels[p];
-      sir.g = pixels[p+1];
-      sir.b = pixels[p+2];
-      sir.a = pixels[p+3];
-      const rbs = i + 1;
-      r_sum += sir.r * rbs;
-      g_sum += sir.g * rbs;
-      b_sum += sir.b * rbs;
-      a_sum += sir.a * rbs;
-      if (i > 0) {
-        r_in_sum += sir.r;
-        g_in_sum += sir.g;
-        b_in_sum += sir.b;
-        a_in_sum += sir.a;
-      }
-    }
-    for (x = 0; x < width; x++) {
-      pixels[yi+3] = pa = (a_sum / div)|0;
-      pixels[yi] = ((r_sum / div)|0);
-      pixels[yi+1] = ((g_sum / div)|0);
-      pixels[yi+2] = ((b_sum / div)|0);
-      r_sum -= r_out_sum;
-      g_sum -= g_out_sum;
-      b_sum -= b_out_sum;
-      a_sum -= a_out_sum;
-      const stackStart = stack.shift();
-      r_out_sum -= stackStart.r;
-      g_out_sum -= stackStart.g;
-      b_out_sum -= stackStart.b;
-      a_out_sum -= stackStart.a;
-      p = yi + (( (x + radius + 1) < width ? (x + radius + 1) : (width - 1) ) << 2);
-      stackStart.r = pixels[p];
-      stackStart.g = pixels[p+1];
-      stackStart.b = pixels[p+2];
-      stackStart.a = pixels[p+3];
-      r_in_sum += stackStart.r;
-      g_in_sum += stackStart.g;
-      b_in_sum += stackStart.b;
-      a_in_sum += stackStart.a;
-      r_sum += r_in_sum;
-      g_sum += g_in_sum;
-      b_sum += b_in_sum;
-      a_sum += a_in_sum;
-      stack.push(stackStart);
-      r_out_sum += stack[0].r;
-      g_out_sum += stack[0].g;
-      b_out_sum += stack[0].b;
-      a_out_sum += stack[0].a;
-      r_in_sum -= stack[0].r;
-      g_in_sum -= stack[0].g;
-      b_in_sum -= stack[0].b;
-      a_in_sum -= stack[0].a;
-      yi += 4;
-    }
-    yw += width;
-  }
-  context.putImageData(imageData, top_x, top_y);
-}
-
 // Detect iOS device
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // --- Initialization code as in previous versions (customer form, photo options, camera, etc.)
-  // (For brevity, the initialization code below is identical to Version 1.4)
-
   // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
@@ -157,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => { stopCamera(); hideAllPhotoSections(); });
   });
 
-  // File Upload
+  // File Upload – load image into crop mode
   document.getElementById('uploadInput').addEventListener('change', e => {
     const file = e.target.files[0];
     if (file) {
@@ -170,14 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // URL Input
+  // URL Input – load image URL into crop mode
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) { originalCapturedDataUrl = url; loadImageForCrop(url); }
     else { alert('Please enter a valid URL.'); }
   });
 
-  // Capture Photo Button
+  // Capture Photo Button – auto-crop camera images
   document.getElementById('capturePhoto').addEventListener('click', () => { captureFromCamera(); });
 
   // Camera Toggle
@@ -195,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Page: Crop Button
+  // Cropping Page: Crop Button – manual crop action
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas({ width: 1080, height: 1080, imageSmoothingQuality: 'high' });
@@ -208,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Page: Fit Entire Image Button
+  // Cropping Page: Fit Entire Image Button – generate final image with blurred fill
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
     img.onload = () => {
@@ -230,19 +137,33 @@ document.addEventListener('DOMContentLoaded', () => {
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
 
-      // On iOS, use the StackBlur fallback if canvas.filter causes hangs.
       if (isIOS) {
+        // Draw cover image on canvas
         ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-        // Apply StackBlur to the background region.
-        stackBlurCanvasRGBA(canvas, 0, 0, size, size, 40);
-        // Then overlay the contained image.
+        // Copy current canvas into an offscreen canvas
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = size;
+        offCanvas.height = size;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(canvas, 0, 0);
+        // Clear main canvas
+        ctx.clearRect(0, 0, size, size);
+        // Simulate blur by drawing the offscreen canvas multiple times with slight offsets
+        const blurRadius = 20; // adjust for desired blur strength
+        ctx.globalAlpha = 0.1;
+        for (let yOffset = -blurRadius; yOffset <= blurRadius; yOffset += 2) {
+          for (let xOffset = -blurRadius; xOffset <= blurRadius; xOffset += 2) {
+            ctx.drawImage(offCanvas, xOffset, yOffset);
+          }
+        }
+        ctx.globalAlpha = 1.0;
+        // Then overlay the contained (fit) image in the center
         ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
         croppedDataUrl = canvas.toDataURL('image/jpeg');
         document.getElementById('finalImage').src = croppedDataUrl;
         hideAllPhotoSections();
         showStep('step3');
       } else if (!('filter' in ctx)) {
-        // If canvas.filter is not supported, use SVG fallback.
         getBlurredDataURL(img, 40, size, size, (blurredImg) => {
           ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
           ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
@@ -252,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
           showStep('step3');
         });
       } else {
-        // Default: use canvas.filter.
         ctx.filter = 'blur(40px)';
         ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
         ctx.filter = 'none';
@@ -269,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button
+  // Final Page: Adjust Cropping Button – reload image into crop mode
   document.getElementById('adjustCropping').addEventListener('click', () => {
     document.getElementById('cropImage').src = originalCapturedDataUrl || capturedDataUrl;
     hideAllPhotoSections();
@@ -461,7 +381,7 @@ function initializeCropper() {
     ready: function () {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
-      // For maximum zoom: limit so the image’s shorter side exactly fills the crop box.
+      // Limit zoom so that the image’s shorter side exactly fills the crop box.
       if (imageData.naturalWidth < imageData.naturalHeight) {
          maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
