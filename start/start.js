@@ -98,7 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('flashToggle').addEventListener('change', e => {
     if (cameraStream) {
       const [track] = cameraStream.getVideoTracks();
-      if (track.getCapabilities().torch) { track.applyConstraints({ advanced: [{ torch: e.target.checked }] }); }
+      if (track.getCapabilities().torch) { 
+        track.applyConstraints({ advanced: [{ torch: e.target.checked }] }); 
+      }
     }
   });
 
@@ -115,70 +117,114 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Function to create a blurred background using CSS (for iOS)
+  function createBlurredBackgroundCSS(img, container) {
+    const blurContainer = document.createElement('div');
+    blurContainer.className = 'blur-container';
+    blurContainer.style.backgroundImage = `url(${img.src})`;
+    container.appendChild(blurContainer);
+
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'image-container';
+    imageContainer.style.backgroundImage = `url(${img.src})`;
+    container.appendChild(imageContainer);
+  }
+
   // Cropping Page: Fit Entire Image Button – generate final image with blurred fill
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
     img.onload = () => {
       const size = 1080;
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
+      // Create a container div for compositing the result
+      const container = document.createElement('div');
+      container.style.width = size + 'px';
+      container.style.height = size + 'px';
+      container.style.position = 'relative';
+      container.style.overflow = 'hidden';
 
-      const scaleCover = Math.max(size / img.width, size / img.height);
-      const coverWidth = img.width * scaleCover;
-      const coverHeight = img.height * scaleCover;
-      const coverDx = (size - coverWidth) / 2;
-      const coverDy = (size - coverHeight) / 2;
+      if (isIOS) {
+        // Use CSS-based blur for iOS
+        createBlurredBackgroundCSS(img, container);
+      } else if (!('filter' in document.createElement('canvas').getContext('2d'))) {
+        // Fallback: if canvas filter is unsupported, use SVG fallback
+        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(blurredImg, 0, 0, size, size);
+          container.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg')})`;
+        });
+      } else {
+        // For non-iOS devices with canvas filter support, we can use the canvas method
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.filter = 'blur(40px)';
+        ctx.drawImage(img, 0, 0, size, size);
+        ctx.filter = 'none';
+        // Set the blurred image as background of the container
+        container.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg')})`;
+        container.style.backgroundSize = 'cover';
+        container.style.backgroundPosition = 'center';
+      }
 
+      // Calculate dimensions for the contained image (fit entirely)
       const scaleFit = Math.min(size / img.width, size / img.height);
       const fitWidth = img.width * scaleFit;
       const fitHeight = img.height * scaleFit;
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
 
+      // Create the main image element (to overlay on top)
+      const image = document.createElement('img');
+      image.src = img.src;
+      image.style.position = 'absolute';
+      image.style.left = fitDx + 'px';
+      image.style.top = fitDy + 'px';
+      image.style.width = fitWidth + 'px';
+      image.style.height = fitHeight + 'px';
+      image.style.zIndex = 1;
+      container.appendChild(image);
+
+      // Append the container temporarily to the body so we can capture its image
+      container.style.position = 'absolute';
+      container.style.top = '-9999px';
+      document.body.appendChild(container);
+
+      // Convert the container into a canvas using html2canvas or a similar method.
+      // For this example, we simply draw the image over the blurred background using canvas.
+      // (Note: In production you might use html2canvas to capture complex DOM nodes.)
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = size;
+      finalCanvas.height = size;
+      const finalCtx = finalCanvas.getContext('2d');
+
+      // For iOS, if using CSS method, we simulate by drawing the blurred background then the image.
       if (isIOS) {
-        // Draw cover image on canvas
-        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-        // Copy current canvas into an offscreen canvas
-        const offCanvas = document.createElement('canvas');
-        offCanvas.width = size;
-        offCanvas.height = size;
-        const offCtx = offCanvas.getContext('2d');
-        offCtx.drawImage(canvas, 0, 0);
-        // Clear main canvas
-        ctx.clearRect(0, 0, size, size);
-        // Simulate blur by drawing the offscreen canvas multiple times with slight offsets
-        const blurRadius = 20; // adjust for desired blur strength
-        ctx.globalAlpha = 0.1;
-        for (let yOffset = -blurRadius; yOffset <= blurRadius; yOffset += 2) {
-          for (let xOffset = -blurRadius; xOffset <= blurRadius; xOffset += 2) {
-            ctx.drawImage(offCanvas, xOffset, yOffset);
-          }
-        }
-        ctx.globalAlpha = 1.0;
-        // Then overlay the contained (fit) image in the center
-        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-        croppedDataUrl = canvas.toDataURL('image/jpeg');
-        document.getElementById('finalImage').src = croppedDataUrl;
-        hideAllPhotoSections();
-        showStep('step3');
-      } else if (!('filter' in ctx)) {
-        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
-          ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
-          ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-          croppedDataUrl = canvas.toDataURL('image/jpeg');
+        // Draw the blurred background (from the container's computed background image)
+        const computedBg = window.getComputedStyle(container).backgroundImage;
+        const bgUrl = computedBg.slice(5, -2);
+        const bgImg = new Image();
+        bgImg.onload = () => {
+          finalCtx.drawImage(bgImg, 0, 0, size, size);
+          finalCtx.drawImage(image, fitDx, fitDy, fitWidth, fitHeight);
+          croppedDataUrl = finalCanvas.toDataURL('image/jpeg');
           document.getElementById('finalImage').src = croppedDataUrl;
+          document.body.removeChild(container);
           hideAllPhotoSections();
           showStep('step3');
-        });
+        };
+        bgImg.src = bgUrl;
       } else {
-        ctx.filter = 'blur(40px)';
-        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-        ctx.filter = 'none';
-        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-        croppedDataUrl = canvas.toDataURL('image/jpeg');
+        // For other devices, simply draw the contained image over the background.
+        // (Assuming the container background is set already.)
+        // Here we re-draw the contained image.
+        finalCtx.drawImage(image, fitDx, fitDy, fitWidth, fitHeight);
+        croppedDataUrl = finalCanvas.toDataURL('image/jpeg');
         document.getElementById('finalImage').src = croppedDataUrl;
+        document.body.removeChild(container);
         hideAllPhotoSections();
         showStep('step3');
       }

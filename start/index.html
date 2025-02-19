@@ -4,13 +4,36 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version 1.4.2</title>
+  <title>Dealership Demo - Version 1.4.3</title>
   <link rel="stylesheet" href="start.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
+  <style>
+    /* Additional styles for the CSS blur solution */
+    .blur-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: blur(40px);
+      z-index: 0;
+    }
+    .image-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+  </style>
 </head>
 <body>
-  <div class="version-banner">Version 1.4.2</div>
+  <div class="version-banner">Version 1.4.3</div>
   <div class="container">
     <!-- Header -->
     <div class="header">
