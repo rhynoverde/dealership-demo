@@ -7,7 +7,27 @@ let cropper = null;               // Cropper.js instance
 let cameraStream = null;
 let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
-let maxZoom = 1;                  // Maximum allowed zoom (computed per image)
+let maxZoom = 1;                  // Maximum allowed zoom (computed per image in crop mode)
+
+// Helper: SVG-based blur function for devices lacking canvas.filter support (e.g. iOS)
+function getBlurredDataURL(img, blurAmount, width, height, callback) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <filter id="blurFilter">
+        <feGaussianBlur stdDeviation="${blurAmount}" />
+      </filter>
+      <image filter="url(#blurFilter)" x="0" y="0" width="${width}" height="${height}" preserveAspectRatio="xMidYMid slice" xlink:href="${img.src}" />
+    </svg>
+  `;
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  const blurredImg = new Image();
+  blurredImg.onload = function() {
+    URL.revokeObjectURL(url);
+    callback(blurredImg);
+  };
+  blurredImg.src = url;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form
@@ -120,28 +140,38 @@ document.addEventListener('DOMContentLoaded', () => {
       canvas.height = size;
       const ctx = canvas.getContext('2d');
 
-      // Draw heavily blurred background (40px blur)
       const scaleCover = Math.max(size / img.width, size / img.height);
       const coverWidth = img.width * scaleCover;
       const coverHeight = img.height * scaleCover;
       const coverDx = (size - coverWidth) / 2;
       const coverDy = (size - coverHeight) / 2;
-      ctx.filter = 'blur(40px)';
-      ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-      ctx.filter = 'none';
 
-      // Draw the full image using "contain" mode so that the SHORTER side aligns with the crop box
       const scaleFit = Math.min(size / img.width, size / img.height);
       const fitWidth = img.width * scaleFit;
       const fitHeight = img.height * scaleFit;
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
-      ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
 
-      croppedDataUrl = canvas.toDataURL('image/jpeg');
-      document.getElementById('finalImage').src = croppedDataUrl;
-      hideAllPhotoSections();
-      showStep('step3');
+      // Use canvas filter if available; otherwise use SVG blur workaround
+      if ('filter' in ctx) {
+        ctx.filter = 'blur(40px)';
+        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
+        ctx.filter = 'none';
+        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+        croppedDataUrl = canvas.toDataURL('image/jpeg');
+        document.getElementById('finalImage').src = croppedDataUrl;
+        hideAllPhotoSections();
+        showStep('step3');
+      } else {
+        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
+          ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
+          ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+          croppedDataUrl = canvas.toDataURL('image/jpeg');
+          document.getElementById('finalImage').src = croppedDataUrl;
+          hideAllPhotoSections();
+          showStep('step3');
+        });
+      }
     };
     img.src = originalCapturedDataUrl || capturedDataUrl;
   });
@@ -313,7 +343,7 @@ function captureFromCamera() {
   fullCanvas.height = video.videoHeight;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
-  // Use a centered square crop based on the shorter dimension
+  // Use centered square crop based on the shorter dimension
   const minDim = Math.min(fullCanvas.width, fullCanvas.height);
   const offsetX = (fullCanvas.width - minDim) / 2;
   const offsetY = (fullCanvas.height - minDim) / 2;
@@ -363,15 +393,14 @@ function initializeCropper() {
     ready: function () {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
-      // For the maximum zoom, we want the image’s shorter side to exactly align with the crop box.
+      // For maximum zoom: limit so that the image’s shorter side exactly aligns with the crop box.
       if (imageData.naturalWidth < imageData.naturalHeight) {
-         // Portrait: shorter side is width
+         // Portrait: shorter side is width.
          maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
-         // Landscape: shorter side is height
+         // Landscape: shorter side is height.
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
-      // Allow zooming out arbitrarily (no enforced minZoom) so that empty space may occur.
     },
     zoom: function(e) {
       // Prevent zooming in beyond the point where the image’s shorter side aligns with the crop box.
@@ -382,7 +411,7 @@ function initializeCropper() {
   });
 }
 
-// For camera-taken photos, auto-crop using the image’s shortest side
+// For camera-taken photos auto-crop (using the shorter side)
 function autoCropCapturedImage(src) {
   const tempImage = new Image();
   tempImage.onload = () => {
