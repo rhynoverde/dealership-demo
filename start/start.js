@@ -122,10 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Note: The "Fit Entire Image" button is only active on non-iOS devices.
-  // If running on iOS, the button is hidden (see above).
+  // "Fit Entire Image" button (non-iOS only)
   document.getElementById('fitEntireButton').addEventListener('click', () => {
-    // This handler will only be reached on non-iOS devices.
     const img = new Image();
     img.onload = () => {
       const size = 1080;
@@ -146,14 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const fitDx = (size - fitWidth) / 2;
       const fitDy = (size - fitHeight) / 2;
 
-      // Use canvas filter or fallback if available
       if ('filter' in ctx) {
         ctx.filter = 'blur(40px)';
         ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
         ctx.filter = 'none';
         ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
       } else {
-        // Fallback using SVG-based blur
         getBlurredDataURL(img, 40, size, size, (blurredImg) => {
           ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
           ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
@@ -217,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Utility: Show step
+// Utility: Show step by id
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
@@ -228,7 +224,7 @@ function hideAllPhotoSections() {
   document.querySelectorAll('.photo-section').forEach(section => section.style.display = 'none');
 }
 
-// Reset photo selection
+// Reset photo selection process
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
@@ -252,7 +248,7 @@ function setupPrefilledMessage() {
 
 // Camera Functions
 
-// Updated pinch zoom now uses CSS scale rather than camera track constraints
+// Updated pinch–zoom: uses CSS scale (with transform-origin center) and now preserves any pan (translate) values.
 function initPinchZoom(video) {
   activePointers.clear();
   let initialDistance = 0;
@@ -278,10 +274,16 @@ function initPinchZoom(video) {
         const newDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
         const ratio = newDistance / initialDistance;
         let newScale = initialScale * ratio;
-        // Optionally, constrain newScale (e.g., between 1 and 3)
-        // newScale = Math.max(1, Math.min(newScale, 3));
         currentScale = newScale;
-        video.style.transform = `scale(${newScale})`;
+        // Preserve any existing translate (pan) values:
+        let transform = video.style.transform;
+        let translateX = 0, translateY = 0;
+        const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+        if (match) {
+          translateX = parseFloat(match[1]);
+          translateY = parseFloat(match[2]);
+        }
+        video.style.transform = `translate(${translateX}px, ${translateY}px) scale(${newScale})`;
         zoomIndicator.style.display = "block";
         zoomIndicator.innerText = ratio > 1 ? "Zooming In..." : "Zooming Out...";
       }
@@ -315,7 +317,7 @@ function startCamera() {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
-        // Use our CSS-based pinch zoom instead of track constraints
+        // Use our CSS-based pinch zoom
         initPinchZoom(video);
       })
       .catch(err => { 
