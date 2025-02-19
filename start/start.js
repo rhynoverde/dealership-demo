@@ -2,27 +2,25 @@
 let customerData = {};
 let capturedDataUrl = "";         // For camera-taken auto-cropped image
 let originalCapturedDataUrl = ""; // Full-resolution original (for recropping)
-let croppedDataUrl = "";          // Final square image after crop adjustments
+let croppedDataUrl = "";          // Final cropped image
 let cropper = null;               // Cropper.js instance
 let cameraStream = null;
 let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
-let currentScale = 1;             // Our CSS-based scale (used for pinch zoom)
+let currentScale = 1;             // CSS-based scale for pinch zoom
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
 
 // Detect iOS device
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // If the device is iOS, hide the "Fit Entire Image" button since it's problematic
+  // Hide "Fit Entire Image" button on iOS if desired
   if (isIOS) {
     const fitBtn = document.getElementById('fitEntireButton');
-    if (fitBtn) {
-      fitBtn.style.display = 'none';
-    }
+    if (fitBtn) { fitBtn.style.display = 'none'; }
   }
 
-  // Step 1: Customer Form
+  // Step 1: Customer Information -> Next
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
     if (!name) { 
@@ -53,9 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Back buttons
   document.querySelectorAll('.backToOptions').forEach(btn => {
-    btn.addEventListener('click', () => { 
-      stopCamera(); 
-      hideAllPhotoSections(); 
+    btn.addEventListener('click', () => {
+      stopCamera();
+      hideAllPhotoSections();
     });
   });
 
@@ -83,12 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Capture Photo Button – auto-crop camera images
+  // Capture Photo Button – auto-crop camera image
   document.getElementById('capturePhoto').addEventListener('click', () => { 
     captureFromCamera(); 
   });
 
-  // Camera Toggle
+  // Camera Toggle (switch between rear and front)
   document.getElementById('cameraToggle').addEventListener('change', (e) => {
     currentCamera = e.target.checked ? "user" : "environment";
     stopCamera();
@@ -105,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Cropping Page: Crop Button – manual crop action
+  // Crop Button: Crop image using Cropper.js
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas({ 
@@ -122,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // "Fit Entire Image" button (non-iOS only)
+  // "Fit Entire Image" button (with blur effect)
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
     img.onload = () => {
@@ -181,17 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('step2');
   });
 
-  // Final Page: Share Buttons
-  document.getElementById('showQR').addEventListener('click', () => {
-    const qr = document.getElementById('qrCode');
-    qr.style.display = (qr.style.display === 'none' ? 'block' : 'none');
-  });
-  document.getElementById('copyMessage').addEventListener('click', () => {
-    const msg = document.getElementById('prefilledMessage');
-    msg.select();
-    document.execCommand('copy');
-    alert('Message copied to clipboard.');
-  });
+  // Share Buttons
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
     navigator.clipboard.writeText(linkText).then(() => { 
@@ -207,24 +195,32 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('bothLink').addEventListener('click', () => { 
     alert('Simulating sending text and email.');
   });
-  document.getElementById('startOver').addEventListener('click', () => { 
+  document.getElementById('showQR').addEventListener('click', () => {
+    const qr = document.getElementById('qrCode');
+    qr.style.display = (qr.style.display === 'none' ? 'block' : 'none');
+  });
+  document.getElementById('copyMessage').addEventListener('click', () => {
+    const msg = document.getElementById('prefilledMessage');
+    msg.select();
+    document.execCommand('copy');
+    alert('Message copied to clipboard.');
+  });
+  document.getElementById('startOver').addEventListener('click', () => {
     resetAll();
     showStep('step1');
   });
 });
 
-// Utility: Show step by id
+// Utility Functions
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
 }
 
-// Utility: Hide all photo sections
 function hideAllPhotoSections() {
   document.querySelectorAll('.photo-section').forEach(section => section.style.display = 'none');
 }
 
-// Reset photo selection process
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
@@ -239,7 +235,6 @@ function resetPhotoProcess() {
   document.getElementById('imageUrlInput').value = '';
 }
 
-// Setup prefilled message on final page
 function setupPrefilledMessage() {
   const msgTemplate = `${customerData.name},\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nToby\nDemo Auto Sales`;
   document.getElementById('prefilledMessage').value = msgTemplate;
@@ -247,8 +242,6 @@ function setupPrefilledMessage() {
 }
 
 // Camera Functions
-
-// Updated pinch–zoom: uses CSS scale (with transform-origin center) and now preserves any pan (translate) values.
 function initPinchZoom(video) {
   activePointers.clear();
   let initialDistance = 0;
@@ -275,7 +268,7 @@ function initPinchZoom(video) {
         const ratio = newDistance / initialDistance;
         let newScale = initialScale * ratio;
         currentScale = newScale;
-        // Preserve any existing translate (pan) values:
+        // Preserve existing pan (translate) values:
         let transform = video.style.transform;
         let translateX = 0, translateY = 0;
         const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
@@ -308,7 +301,6 @@ function initPinchZoom(video) {
 
 function startCamera() {
   const video = document.getElementById('cameraPreview');
-  // Reset scale when starting camera
   currentScale = 1;
   video.style.transform = `scale(${currentScale})`;
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -317,7 +309,6 @@ function startCamera() {
         cameraStream = stream;
         video.srcObject = stream;
         video.play();
-        // Use our CSS-based pinch zoom
         initPinchZoom(video);
       })
       .catch(err => { 
@@ -340,7 +331,7 @@ function captureFromCamera() {
   fullCanvas.height = video.videoHeight;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, 0, 0, fullCanvas.width, fullCanvas.height);
-  // Use centered square crop based on the shorter dimension
+  // Centered square crop based on the shorter dimension
   const minDim = Math.min(fullCanvas.width, fullCanvas.height);
   const offsetX = (fullCanvas.width - minDim) / 2;
   const offsetY = (fullCanvas.height - minDim) / 2;
@@ -359,7 +350,6 @@ function captureFromCamera() {
 }
 
 // Cropping Functions
-
 function loadImageForCrop(src) {
   originalCapturedDataUrl = src;
   document.getElementById('cropImage').src = src;
@@ -369,9 +359,7 @@ function loadImageForCrop(src) {
 }
 
 function initializeCropper() {
-  if (cropper) { 
-    cropper.destroy(); 
-  }
+  if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
   cropper = new Cropper(image, {
     aspectRatio: 1,
@@ -398,34 +386,16 @@ function initializeCropper() {
       } else {
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
-    },
-    zoom: function(e) {
-      if (e.detail.ratio > maxZoom) { 
-        cropper.zoomTo(maxZoom); 
-      }
     }
+    // Removed custom zoom callback so zooming preserves pan/position.
   });
 }
 
-// For camera-taken photos auto-crop (using the shorter side)
-function autoCropCapturedImage(src) {
-  const tempImage = new Image();
-  tempImage.onload = () => {
-    const minDim = Math.min(tempImage.width, tempImage.height);
-    const offsetX = (tempImage.width - minDim) / 2;
-    const offsetY = (tempImage.height - minDim) / 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = minDim;
-    canvas.height = minDim;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(tempImage, offsetX, offsetY, minDim, minDim, 0, 0, minDim, minDim);
-    capturedDataUrl = src;
-    croppedDataUrl = canvas.toDataURL('image/jpeg');
-    setupPrefilledMessage();
-    document.getElementById('finalImage').src = croppedDataUrl;
-    showStep('step3');
-  };
-  tempImage.src = src;
+// (Optional) Fallback function for blurred background if canvas.filter is not supported
+function getBlurredDataURL(img, blurAmount, width, height, callback) {
+  // This is a stub. In production you might use a library or more complex logic.
+  // For now, simply call the callback with the original image.
+  callback(img);
 }
 
 // Reset Function
