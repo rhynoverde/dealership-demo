@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fitBtn) { fitBtn.style.display = 'none'; }
   }
 
-  // Step 1: Customer Information -> Next
+  // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
     if (!name) { 
@@ -74,8 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) { 
-      originalCapturedDataUrl = url; 
-      loadImageForCrop(url); 
+      // Set crossOrigin so that the canvas won't be tainted (if server supports CORS)
+      originalCapturedDataUrl = url;
+      loadImageForCrop(url, true);
     } else { 
       alert('Please enter a valid URL.'); 
     }
@@ -123,6 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // "Fit Entire Image" button (with blur effect)
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
+    // Ensure crossOrigin is set to Anonymous if using URL images
+    img.crossOrigin = "Anonymous";
     img.onload = () => {
       const size = 1080;
       const canvas = document.createElement('canvas');
@@ -164,9 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – reload image into crop mode
+  // Final Page: Adjust Cropping Button – now loads the full original image so user can re-crop
   document.getElementById('adjustCropping').addEventListener('click', () => {
-    document.getElementById('cropImage').src = originalCapturedDataUrl || capturedDataUrl;
+    if(originalCapturedDataUrl){
+      document.getElementById('cropImage').src = originalCapturedDataUrl;
+    } else {
+      // Fallback if for some reason original is missing.
+      document.getElementById('cropImage').src = capturedDataUrl;
+    }
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
     initializeCropper();
@@ -229,7 +237,7 @@ function resetPhotoProcess() {
     cropper = null;
   }
   capturedDataUrl = "";
-  originalCapturedDataUrl = "";
+  // Do not clear originalCapturedDataUrl so we can re-crop with full image.
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -350,7 +358,11 @@ function captureFromCamera() {
 }
 
 // Cropping Functions
-function loadImageForCrop(src) {
+function loadImageForCrop(src, isUrl = false) {
+  // If the image is loaded from a URL, set crossOrigin to Anonymous so canvas is not tainted
+  if(isUrl){
+    document.getElementById('cropImage').crossOrigin = "Anonymous";
+  }
   originalCapturedDataUrl = src;
   document.getElementById('cropImage').src = src;
   hideAllPhotoSections();
@@ -387,14 +399,13 @@ function initializeCropper() {
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
     }
-    // Removed custom zoom callback so zooming preserves pan/position.
+    // Custom zoom callback removed to preserve pan/position.
   });
 }
 
 // (Optional) Fallback function for blurred background if canvas.filter is not supported
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
-  // This is a stub. In production you might use a library or more complex logic.
-  // For now, simply call the callback with the original image.
+  // This is a stub; in production use a proper library if needed.
   callback(img);
 }
 
