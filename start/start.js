@@ -4,9 +4,9 @@ let capturedDataUrl = "";         // For camera-taken auto-cropped image
 let originalCapturedDataUrl = ""; // Full-resolution original (for recropping)
 let croppedDataUrl = "";          // Final cropped image
 let cropper = null;               // Cropper.js instance
-let savedImageData = null;        // Stores image transform (pan/zoom) from the cropper
+let savedImageData = null;        // Stores image data (pan/zoom) from the cropper
 let cameraStream = null;
-let activePointers = new Map();   // For custom pinch-to-zoom (if used)
+let activePointers = new Map();   // For custom pinch-to-zoom
 let currentCamera = "environment"; // "environment" for rear, "user" for front
 let currentScale = 1;             // CSS-based scale for pinch zoom
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
-    if (!name) {
+    if (!name) { 
       alert('Please enter the customer name.');
       return;
     }
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Crop Button: Save image transform then crop image
+  // Crop Button: Save current image data then crop image
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       savedImageData = cropper.getImageData();
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – reload full original image, restore saved image transform, and reset crop box to default (autoCropArea:0.8)
+  // Final Page: Adjust Cropping Button – reloads the full original image, restores saved image data, and forces the crop box to full container size.
   document.getElementById('adjustCropping').addEventListener('click', () => {
     if (originalCapturedDataUrl) {
       document.getElementById('cropImage').src = originalCapturedDataUrl;
@@ -177,10 +177,18 @@ document.addEventListener('DOMContentLoaded', () => {
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
     initializeCropper(() => {
+      // Restore image data (pan/zoom) if available
       if (savedImageData) {
-        // Restore only the image transform (zoom/pan) without restoring the crop box dimensions
-        cropper.setImageData(savedImageData);
+        cropper.setData(savedImageData);
       }
+      // Force crop box to fill container (300x300)
+      const container = document.getElementById('cropContainer');
+      cropper.setCropBoxData({
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+        left: 0,
+        top: 0
+      });
     });
     showStep('step2');
   });
@@ -241,7 +249,7 @@ function resetPhotoProcess() {
     cropper = null;
   }
   capturedDataUrl = "";
-  // Do not clear originalCapturedDataUrl so that full image remains available.
+  // Do not clear originalCapturedDataUrl so the full image remains available for re-cropping.
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -277,7 +285,7 @@ function initPinchZoom(video) {
       if (activePointers.size === 2) {
         const points = Array.from(activePointers.values());
         const newDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-        // Use the inverse ratio so that spreading fingers zooms in.
+        // Invert the ratio so that pinching in increases scale.
         const ratio = initialDistance / newDistance;
         let newScale = initialScale * ratio;
         currentScale = newScale;
@@ -364,7 +372,7 @@ function captureFromCamera() {
 
 // Cropping Functions
 function loadImageForCrop(src, isUrl = false) {
-  if (isUrl) {
+  if(isUrl){
     document.getElementById('cropImage').crossOrigin = "Anonymous";
   }
   originalCapturedDataUrl = src;
@@ -377,20 +385,20 @@ function loadImageForCrop(src, isUrl = false) {
 function initializeCropper(callback) {
   if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
-  // Use viewMode:1 and autoCropArea:0.8 so that the crop box is ~80% of the container
+  // Use viewMode:2 and autoCropArea:1 so that the crop box fills the container.
   cropper = new Cropper(image, {
     aspectRatio: 1,
-    viewMode: 1,
+    viewMode: 2,
     movable: true,
     zoomable: true,
     rotatable: false,
     scalable: false,
     cropBoxResizable: false,
-    autoCropArea: 0.8,
+    autoCropArea: 1,
     responsive: true,
     guides: false,
     highlight: false,
-    background: true,
+    background: false,
     dragMode: 'move',
     cropBoxMovable: false,
     toggleDragModeOnDblclick: false,
@@ -398,11 +406,18 @@ function initializeCropper(callback) {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
       if (imageData.naturalWidth < imageData.naturalHeight) {
-        maxZoom = cropBoxData.width / imageData.naturalWidth;
+         maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
-        maxZoom = cropBoxData.width / imageData.naturalHeight;
+         maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
-      // Do not force the crop box size here—the autoCropArea option will size it to 80% of the container.
+      // Force the crop box to fill the container (assumed to be 300x300)
+      const container = document.getElementById('cropContainer');
+      cropper.setCropBoxData({
+        width: container.offsetWidth,
+        height: container.offsetHeight,
+        left: 0,
+        top: 0
+      });
     }
   });
   if (typeof callback === 'function') {
@@ -410,7 +425,7 @@ function initializeCropper(callback) {
   }
 }
 
-// (Optional) Fallback for blurred background if canvas.filter unsupported.
+// (Optional) Fallback for blurred background if canvas.filter is unsupported.
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
   callback(img);
 }
