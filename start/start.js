@@ -5,7 +5,7 @@ let originalCapturedDataUrl = ""; // Full-resolution original (for recropping)
 let croppedDataUrl = "";          // Final cropped image
 let cropper = null;               // Cropper.js instance
 let savedCropBoxData = null;      // Saved crop box data from the initial crop
-let savedImageData = null;        // Saved image transform (pan/zoom) from the initial crop
+let savedCanvasData = null;       // Saved canvas (pan/zoom) data from the initial crop
 let cameraStream = null;
 let activePointers = new Map();   // For custom pinch-to-zoom (if used)
 let currentCamera = "environment"; // "environment" for rear, "user" for front
@@ -105,11 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Crop Button: Save crop box and image transform data, then crop image
+  // Crop Button: Save crop box and canvas (pan/zoom) data, then crop image
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
       savedCropBoxData = cropper.getCropBoxData();
-      savedImageData = cropper.getImageData();
+      savedCanvasData = cropper.getCanvasData();
       const croppedCanvas = cropper.getCroppedCanvas({
         width: 1080,
         height: 1080,
@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – reload the full original image and restore the previous zoom/pan and crop box state.
+  // Final Page: Adjust Cropping Button – reload full original image and restore saved canvas (pan/zoom) and crop box state.
   document.getElementById('adjustCropping').addEventListener('click', () => {
     const cropImageElement = document.getElementById('cropImage');
     cropImageElement.src = originalCapturedDataUrl || capturedDataUrl;
@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cropSection').style.display = 'block';
     // Reinitialize the cropper and restore saved settings.
     initializeCropper(() => {
-      if (savedImageData) {
-        cropper.setImageData(savedImageData);
+      if (savedCanvasData) {
+        cropper.setCanvasData(savedCanvasData);
       }
       if (savedCropBoxData) {
         cropper.setCropBoxData(savedCropBoxData);
@@ -418,7 +418,7 @@ function resetAll() {
   originalCapturedDataUrl = "";
   croppedDataUrl = "";
   savedCropBoxData = null;
-  savedImageData = null;
+  savedCanvasData = null;
   if (cropper) {
     cropper.destroy();
     cropper = null;
