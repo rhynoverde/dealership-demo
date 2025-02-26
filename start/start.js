@@ -4,9 +4,9 @@ let capturedDataUrl = "";         // For camera-taken auto-cropped image
 let originalCapturedDataUrl = ""; // Full-resolution original (for recropping)
 let croppedDataUrl = "";          // Final cropped image
 let cropper = null;               // Cropper.js instance
-let savedCropData = null;         // Stores cropper data (pan/zoom/crop box) when user crops
+let savedImageData = null;        // Stores image transform (pan/zoom) from the cropper
 let cameraStream = null;
-let activePointers = new Map();   // For custom pinch-to-zoom
+let activePointers = new Map();   // For custom pinch-to-zoom (if used)
 let currentCamera = "environment"; // "environment" for rear, "user" for front
 let currentScale = 1;             // CSS-based scale for pinch zoom
 let maxZoom = 1;                  // Maximum allowed zoom (computed in crop mode)
@@ -24,9 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
-    if (!name) { 
-      alert('Please enter the customer name.'); 
-      return; 
+    if (!name) {
+      alert('Please enter the customer name.');
+      return;
     }
     customerData.name = name;
     customerData.email = document.getElementById('customerEmail').value.trim();
@@ -74,22 +74,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // URL Input – load image URL into crop mode
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput').value.trim();
-    if (url) { 
-      // For URL images, set crossOrigin to avoid tainted canvas errors
+    if (url) {
       originalCapturedDataUrl = url;
       loadImageForCrop(url, true);
-    } else { 
-      alert('Please enter a valid URL.'); 
+    } else {
+      alert('Please enter a valid URL.');
     }
   });
 
   // Capture Photo Button – auto-crop camera image
-  document.getElementById('capturePhoto').addEventListener('click', () => { 
-    captureFromCamera(); 
+  document.getElementById('capturePhoto').addEventListener('click', () => {
+    captureFromCamera();
   });
 
   // Camera Toggle (switch between rear and front)
-  document.getElementById('cameraToggle').addEventListener('change', (e) => {
+  document.getElementById('cameraToggle').addEventListener('change', e => {
     currentCamera = e.target.checked ? "user" : "environment";
     stopCamera();
     startCamera();
@@ -99,20 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('flashToggle').addEventListener('change', e => {
     if (cameraStream) {
       const [track] = cameraStream.getVideoTracks();
-      if (track.getCapabilities().torch) { 
-        track.applyConstraints({ advanced: [{ torch: e.target.checked }] }); 
+      if (track.getCapabilities().torch) {
+        track.applyConstraints({ advanced: [{ torch: e.target.checked }] });
       }
     }
   });
 
-  // Crop Button: Crop image using Cropper.js – save crop data before destroying cropper
+  // Crop Button: Save image transform then crop image
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
-      savedCropData = cropper.getData();
-      const croppedCanvas = cropper.getCroppedCanvas({ 
-        width: 1080, 
-        height: 1080, 
-        imageSmoothingQuality: 'high' 
+      savedImageData = cropper.getImageData();
+      const croppedCanvas = cropper.getCroppedCanvas({
+        width: 1080,
+        height: 1080,
+        imageSmoothingQuality: 'high'
       });
       croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
       cropper.destroy();
@@ -168,9 +167,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – now loads the full original image and restores previous crop data
+  // Final Page: Adjust Cropping Button – reload full original image, restore saved image transform, and reset crop box to default (autoCropArea:0.8)
   document.getElementById('adjustCropping').addEventListener('click', () => {
-    if(originalCapturedDataUrl){
+    if (originalCapturedDataUrl) {
       document.getElementById('cropImage').src = originalCapturedDataUrl;
     } else {
       document.getElementById('cropImage').src = capturedDataUrl;
@@ -178,8 +177,9 @@ document.addEventListener('DOMContentLoaded', () => {
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
     initializeCropper(() => {
-      if(savedCropData) {
-        cropper.setData(savedCropData);
+      if (savedImageData) {
+        // Restore only the image transform (zoom/pan) without restoring the crop box dimensions
+        cropper.setImageData(savedImageData);
       }
     });
     showStep('step2');
@@ -194,17 +194,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Share Buttons
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
-    navigator.clipboard.writeText(linkText).then(() => { 
+    navigator.clipboard.writeText(linkText).then(() => {
       alert('Link copied to clipboard.');
     });
   });
-  document.getElementById('textLink').addEventListener('click', () => { 
+  document.getElementById('textLink').addEventListener('click', () => {
     alert('Simulating sending a text message.');
   });
-  document.getElementById('emailLink').addEventListener('click', () => { 
+  document.getElementById('emailLink').addEventListener('click', () => {
     alert('Simulating sending an email.');
   });
-  document.getElementById('bothLink').addEventListener('click', () => { 
+  document.getElementById('bothLink').addEventListener('click', () => {
     alert('Simulating sending text and email.');
   });
   document.getElementById('showQR').addEventListener('click', () => {
@@ -236,12 +236,12 @@ function hideAllPhotoSections() {
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
-  if (cropper) { 
+  if (cropper) {
     cropper.destroy();
     cropper = null;
   }
   capturedDataUrl = "";
-  // Do not clear originalCapturedDataUrl so that the full image is available for re-cropping.
+  // Do not clear originalCapturedDataUrl so that full image remains available.
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -277,7 +277,8 @@ function initPinchZoom(video) {
       if (activePointers.size === 2) {
         const points = Array.from(activePointers.values());
         const newDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-        const ratio = newDistance / initialDistance;
+        // Use the inverse ratio so that spreading fingers zooms in.
+        const ratio = initialDistance / newDistance;
         let newScale = initialScale * ratio;
         currentScale = newScale;
         // Preserve existing pan (translate) values:
@@ -298,15 +299,15 @@ function initPinchZoom(video) {
   video.addEventListener('pointerup', e => {
     e.preventDefault();
     activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { 
-      zoomIndicator.style.display = "none"; 
+    if (activePointers.size < 2) {
+      zoomIndicator.style.display = "none";
     }
   });
   video.addEventListener('pointercancel', e => {
     e.preventDefault();
     activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { 
-      zoomIndicator.style.display = "none"; 
+    if (activePointers.size < 2) {
+      zoomIndicator.style.display = "none";
     }
   });
 }
@@ -323,8 +324,8 @@ function startCamera() {
         video.play();
         initPinchZoom(video);
       })
-      .catch(err => { 
-        alert('Camera access denied or not available.'); 
+      .catch(err => {
+        alert('Camera access denied or not available.');
       });
   }
 }
@@ -363,8 +364,7 @@ function captureFromCamera() {
 
 // Cropping Functions
 function loadImageForCrop(src, isUrl = false) {
-  // If the image is loaded from a URL, set crossOrigin to Anonymous to prevent canvas tainting.
-  if(isUrl){
+  if (isUrl) {
     document.getElementById('cropImage').crossOrigin = "Anonymous";
   }
   originalCapturedDataUrl = src;
@@ -377,6 +377,7 @@ function loadImageForCrop(src, isUrl = false) {
 function initializeCropper(callback) {
   if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
+  // Use viewMode:1 and autoCropArea:0.8 so that the crop box is ~80% of the container
   cropper = new Cropper(image, {
     aspectRatio: 1,
     viewMode: 1,
@@ -389,31 +390,28 @@ function initializeCropper(callback) {
     responsive: true,
     guides: false,
     highlight: false,
-    background: false,
+    background: true,
     dragMode: 'move',
     cropBoxMovable: false,
     toggleDragModeOnDblclick: false,
     ready: function () {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
-      // Limit zoom so that the image’s shorter side exactly fills the crop box.
       if (imageData.naturalWidth < imageData.naturalHeight) {
-         maxZoom = cropBoxData.width / imageData.naturalWidth;
+        maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
-         maxZoom = cropBoxData.width / imageData.naturalHeight;
+        maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
+      // Do not force the crop box size here—the autoCropArea option will size it to 80% of the container.
     }
-    // Removed custom zoom callback so that pan/position is preserved.
   });
   if (typeof callback === 'function') {
-    // Give Cropper a moment to initialize before setting data.
     setTimeout(callback, 100);
   }
 }
 
-// (Optional) Fallback function for blurred background if canvas.filter is not supported
+// (Optional) Fallback for blurred background if canvas.filter unsupported.
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
-  // This is a stub; in production use a proper library if needed.
   callback(img);
 }
 
@@ -423,9 +421,9 @@ function resetAll() {
   capturedDataUrl = "";
   originalCapturedDataUrl = "";
   croppedDataUrl = "";
-  savedCropData = null;
-  if (cropper) { 
-    cropper.destroy(); 
+  savedImageData = null;
+  if (cropper) {
+    cropper.destroy();
     cropper = null;
   }
   document.getElementById('customerForm').reset();
