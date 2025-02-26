@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Photo Option Buttons
   document.querySelectorAll('.photo-option').forEach(btn => {
     btn.addEventListener('click', e => {
+      // When a new image is chosen, clear saved pan/zoom and crop data.
+      savedCanvasData = null;
+      savedCropBoxData = null;
+      
       const option = e.currentTarget.getAttribute('data-option');
       hideAllPhotoSections();
       if (option === 'take') {
@@ -61,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // File Upload – load image into crop mode
   document.getElementById('uploadInput').addEventListener('change', e => {
+    // Clear saved states for a new image.
+    savedCanvasData = null;
+    savedCropBoxData = null;
+    
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -74,6 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // URL Input – load image URL into crop mode
   document.getElementById('loadUrlImage').addEventListener('click', () => {
+    savedCanvasData = null;
+    savedCropBoxData = null;
+    
     const url = document.getElementById('imageUrlInput').value.trim();
     if (url) {
       originalCapturedDataUrl = url;
@@ -85,6 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Capture Photo Button – auto-crop camera image
   document.getElementById('capturePhoto').addEventListener('click', () => {
+    // Clear saved states when capturing a new image.
+    savedCanvasData = null;
+    savedCropBoxData = null;
     captureFromCamera();
   });
 
@@ -164,7 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Cropping Page: Change Photo Button
-  document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
+  document.getElementById('changePhoto').addEventListener('click', () => {
+    resetPhotoProcess();
+    // Clear saved state when changing the photo.
+    savedCanvasData = null;
+    savedCropBoxData = null;
+  });
 
   // Final Page: Adjust Cropping Button – reload full original image and restore saved canvas (pan/zoom) and crop box state.
   document.getElementById('adjustCropping').addEventListener('click', () => {
@@ -187,6 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Final Page: Change Photo Button
   document.getElementById('changeFinalImage').addEventListener('click', () => {
     resetPhotoProcess();
+    savedCanvasData = null;
+    savedCropBoxData = null;
     showStep('step2');
   });
 
@@ -240,7 +261,6 @@ function resetPhotoProcess() {
     cropper = null;
   }
   capturedDataUrl = "";
-  // Do not clear originalCapturedDataUrl so the full image remains available.
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -360,6 +380,10 @@ function captureFromCamera() {
 
 // Cropping Functions
 function loadImageForCrop(src, isUrl = false) {
+  // Clear saved states when loading a new image.
+  savedCanvasData = null;
+  savedCropBoxData = null;
+  
   if (isUrl) {
     document.getElementById('cropImage').crossOrigin = "Anonymous";
   }
@@ -373,7 +397,6 @@ function loadImageForCrop(src, isUrl = false) {
 function initializeCropper(callback) {
   if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
-  // Initialize using default settings as in version 2.3.1
   cropper = new Cropper(image, {
     aspectRatio: 1,
     viewMode: 1,
@@ -398,7 +421,6 @@ function initializeCropper(callback) {
       } else {
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
-      // Do not force additional crop box sizing or zoom here.
     }
   });
   if (typeof callback === 'function') {
