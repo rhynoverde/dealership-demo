@@ -166,18 +166,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', resetPhotoProcess);
 
-  // Final Page: Adjust Cropping Button – reload the full original image and restore only the saved crop box coordinates
+  // Final Page: Adjust Cropping Button – reload the full original image and restore the previous zoom/pan and crop box state.
   document.getElementById('adjustCropping').addEventListener('click', () => {
-    if (originalCapturedDataUrl) {
-      document.getElementById('cropImage').src = originalCapturedDataUrl;
-    } else {
-      document.getElementById('cropImage').src = capturedDataUrl;
-    }
+    const cropImageElement = document.getElementById('cropImage');
+    cropImageElement.src = originalCapturedDataUrl || capturedDataUrl;
     hideAllPhotoSections();
     document.getElementById('cropSection').style.display = 'block';
-    // Reinitialize cropper with default settings (so full image is visible)
+    // Reinitialize the cropper and restore saved settings.
     initializeCropper(() => {
-      // Restore the previously saved crop box coordinates
+      if (savedImageData) {
+        cropper.setImageData(savedImageData);
+      }
       if (savedCropBoxData) {
         cropper.setCropBoxData(savedCropBoxData);
       }
@@ -241,7 +240,7 @@ function resetPhotoProcess() {
     cropper = null;
   }
   capturedDataUrl = "";
-  // Do not clear originalCapturedDataUrl so full image remains available.
+  // Do not clear originalCapturedDataUrl so the full image remains available.
   croppedDataUrl = "";
   document.getElementById('uploadInput').value = '';
   document.getElementById('imageUrlInput').value = '';
@@ -374,7 +373,7 @@ function loadImageForCrop(src, isUrl = false) {
 function initializeCropper(callback) {
   if (cropper) { cropper.destroy(); }
   const image = document.getElementById('cropImage');
-  // Initialize using default settings as in 2.3.1
+  // Initialize using default settings as in version 2.3.1
   cropper = new Cropper(image, {
     aspectRatio: 1,
     viewMode: 1,
@@ -399,7 +398,7 @@ function initializeCropper(callback) {
       } else {
          maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
-      // Do not force any additional crop box sizing here.
+      // Do not force additional crop box sizing or zoom here.
     }
   });
   if (typeof callback === 'function') {
