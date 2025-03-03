@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fitBtn = document.getElementById('fitEntireButton');
     if (fitBtn) { fitBtn.style.display = 'none'; }
   }
-
   // Step 1: Customer Form
   document.getElementById('toStep2').addEventListener('click', () => {
     const name = document.getElementById('customerName').value.trim();
@@ -33,7 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     customerData.phone = document.getElementById('customerPhone').value.trim();
     showStep('step2');
   });
-
   // Photo Option Buttons
   document.querySelectorAll('.photo-option').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -52,23 +50,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
   // Back buttons for upload/URL screens
   document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
       stopCamera();
       hideAllPhotoSections();
-      document.getElementById('photoOptions').style.display = 'flex';
+      document.getElementById('photoOptions').style.display = 'block';
     });
   });
-  
   // Camera Back button (upper left)
   document.getElementById('cameraBack').addEventListener('click', () => {
     stopCamera();
     hideAllPhotoSections();
-    document.getElementById('photoOptions').style.display = 'flex';
+    document.getElementById('photoOptions').style.display = 'block';
   });
-
   // File Upload – load image into crop mode
   document.getElementById('uploadInput').addEventListener('change', e => {
     savedCanvasData = null;
@@ -83,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.readAsDataURL(file);
     }
   });
-
   // URL Input – load image URL into crop mode
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     savedCanvasData = null;
@@ -96,21 +90,18 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please enter a valid URL.');
     }
   });
-
   // Capture Photo Button
   document.getElementById('capturePhoto').addEventListener('click', () => {
     savedCanvasData = null;
     savedCropBoxData = null;
     captureFromCamera();
   });
-
   // Swap Camera Button
   document.getElementById('swapCamera').addEventListener('click', () => {
     currentCamera = currentCamera === "environment" ? "user" : "environment";
     stopCamera();
     startCamera();
   });
-
   // Flash Toggle
   document.getElementById('flashToggle').addEventListener('click', e => {
     const btn = e.currentTarget;
@@ -124,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-
   // Crop Button
   document.getElementById('cropButton').addEventListener('click', () => {
     if (cropper) {
@@ -143,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
       showStep('step3');
     }
   });
-
   // "Fit Entire Image" Button
   document.getElementById('fitEntireButton').addEventListener('click', () => {
     const img = new Image();
@@ -182,16 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     img.src = originalCapturedDataUrl || capturedDataUrl;
   });
-
   // Cropping Page: Change Photo Button
   document.getElementById('changePhoto').addEventListener('click', () => {
     resetPhotoProcess();
     savedCanvasData = null;
     savedCropBoxData = null;
-    document.getElementById('photoOptions').style.display = 'flex';
+    document.getElementById('photoOptions').style.display = 'block';
     showStep('step2');
   });
-
   // Final Page: Adjust Cropping Button
   document.getElementById('adjustCropping').addEventListener('click', () => {
     const cropImageElement = document.getElementById('cropImage');
@@ -204,15 +191,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     showStep('step2');
   });
-
   // Final Page: Change Photo Button
   document.getElementById('changeFinalImage').addEventListener('click', () => {
     resetPhotoProcess();
     savedCanvasData = null;
     savedCropBoxData = null;
+    document.getElementById('photoOptions').style.display = 'block';
     showStep('step2');
   });
-
   // Share Buttons
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
@@ -242,11 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('startOver').addEventListener('click', () => {
     resetAll();
     showStep('step1');
-    document.getElementById('photoOptions').style.display = 'flex';
+    document.getElementById('photoOptions').style.display = 'block';
   });
 });
-
-// Utility Functions
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
@@ -268,8 +252,6 @@ function setupPrefilledMessage() {
   document.getElementById('prefilledMessage').value = msgTemplate;
   document.getElementById('finalImage').src = croppedDataUrl;
 }
-
-// Camera Functions
 function initPinchZoom(video) {
   activePointers.clear();
   let initialDistance = 0;
@@ -342,44 +324,37 @@ function stopCamera() {
 function captureFromCamera() {
   const container = document.getElementById('cameraContainer');
   const rect = container.getBoundingClientRect();
-  // Use "cover" scaling: determine the source rectangle from video to fill container
   const video = document.getElementById('cameraPreview');
+  // "Cover" scaling: calculate source rectangle from video to fill container
   let sx, sy, sWidth, sHeight;
   const containerRatio = rect.width / rect.height;
   const videoRatio = video.videoWidth / video.videoHeight;
   if (videoRatio > containerRatio) {
-    // Video is wider: fit height, crop sides
     sHeight = video.videoHeight;
     sWidth = sHeight * containerRatio;
     sx = (video.videoWidth - sWidth) / 2;
     sy = 0;
   } else {
-    // Video is taller: fit width, crop top and bottom
     sWidth = video.videoWidth;
     sHeight = sWidth / containerRatio;
     sx = 0;
     sy = (video.videoHeight - sHeight) / 2;
   }
-  // Draw video frame onto canvas using cover scaling
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = rect.width;
   fullCanvas.height = rect.height;
   const ctx = fullCanvas.getContext('2d');
   ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, rect.width, rect.height);
-  
-  // Now, the overlay hole is centered and is 300x300 within a 400x400 container.
-  const offset = (rect.width - 300) / 2; // expected 50 if container is 400x400
-  // Crop the canvas using the overlay coordinates.
+  // The overlay hole is centered and 300x300 within a 400x400 container.
+  const offset = (rect.width - 300) / 2;
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = 300;
   cropCanvas.height = 300;
   const cropCtx = cropCanvas.getContext('2d');
   cropCtx.drawImage(fullCanvas, offset, offset, 300, 300, 0, 0, 300, 300);
-  
   originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
   capturedDataUrl = cropCanvas.toDataURL('image/jpeg');
   croppedDataUrl = capturedDataUrl;
-  
   stopCamera();
   document.getElementById('finalImage').src = croppedDataUrl;
   setupPrefilledMessage();
@@ -418,9 +393,9 @@ function initializeCropper(callback) {
       const imageData = cropper.getImageData();
       const cropBoxData = cropper.getCropBoxData();
       if (imageData.naturalWidth < imageData.naturalHeight) {
-         maxZoom = cropBoxData.width / imageData.naturalWidth;
+        maxZoom = cropBoxData.width / imageData.naturalWidth;
       } else {
-         maxZoom = cropBoxData.width / imageData.naturalHeight;
+        maxZoom = cropBoxData.width / imageData.naturalHeight;
       }
     }
   });

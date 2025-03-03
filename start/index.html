@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version 2.4.8 (Updated Camera Capture & Change Photo)</title>
+  <title>Dealership Demo - Version 2.4.10 (Uniform Choices & Fixed Navigation)</title>
   <link rel="stylesheet" href="start.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -30,11 +30,20 @@
     <!-- Step 2: Photo Selection & Capture -->
     <section id="step2" class="step">
       <div class="form-section">
-        <!-- Photo Options (shown initially) -->
+        <!-- Vertical Photo Options -->
         <div id="photoOptions" class="photo-options">
-          <button type="button" class="photo-option" data-option="take">Take Photo</button>
-          <button type="button" class="photo-option" data-option="upload">Upload Photo</button>
-          <button type="button" class="photo-option" data-option="url">Paste Image URL</button>
+          <button type="button" class="photo-option" data-option="take">
+            <span class="icon">📷</span>
+            <span class="label">Take Photo</span>
+          </button>
+          <button type="button" class="photo-option" data-option="upload">
+            <span class="icon">⬆️</span>
+            <span class="label">Upload Photo</span>
+          </button>
+          <button type="button" class="photo-option" data-option="url">
+            <span class="icon">🔗</span>
+            <span class="label">Paste Image URL</span>
+          </button>
         </div>
 
         <!-- Take Photo Section -->
@@ -64,7 +73,7 @@
           <p>Please choose a photo to upload:</p>
           <input type="file" id="uploadInput" accept="image/*" />
           <label for="uploadInput" class="upload-label">Select Photo</label>
-          <button type="button" class="backToOptions">Back</button>
+          <button type="button" class="backToOptions">← Back</button>
         </div>
 
         <!-- Paste URL Section -->
@@ -73,7 +82,7 @@
           <label for="imageUrlInput" class="input-label">Image URL</label>
           <input type="url" id="imageUrlInput" placeholder="https://example.com/photo.jpg" />
           <button type="button" id="loadUrlImage">Load Image</button>
-          <button type="button" class="backToOptions">Back</button>
+          <button type="button" class="backToOptions">← Back</button>
         </div>
 
         <!-- Cropping Section -->
@@ -127,7 +136,7 @@
     </section>
   </div>
   <footer id="pageFooter">
-    <span class="footer-version">Version 2.4.8</span>
+    <span class="footer-version">Version 2.4.10</span>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
   <script src="start.js"></script>
