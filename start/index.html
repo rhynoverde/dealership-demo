@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version 2.5.1</title>
+  <title>Dealership Demo - Version 2.5.2 (4x Capture Resolution)</title>
   <link rel="stylesheet" href="start.css" />
+  <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
 </head>
 <body>
@@ -28,6 +30,7 @@
     <!-- Step 2: Photo Selection & Capture -->
     <section id="step2" class="step">
       <div class="form-section">
+        <!-- Vertical Photo Options -->
         <div id="photoOptions" class="photo-options">
           <button type="button" class="photo-option" data-option="take">
             <span class="icon">📷</span>
@@ -42,24 +45,29 @@
             <span class="label">Paste Image URL</span>
           </button>
         </div>
+
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
+          <!-- Camera header with back button in upper left -->
           <div class="camera-header">
             <button type="button" id="cameraBack" class="back-btn">← Back</button>
           </div>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
+            <!-- Overlay: centered 300x300 square -->
             <div id="cameraOverlay">
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
           </div>
+          <!-- Camera Controls -->
           <div class="camera-controls">
             <button type="button" id="swapCamera" class="icon-btn">↺</button>
             <button type="button" id="capturePhoto" class="shutter-btn"></button>
             <button type="button" id="flashToggle" class="icon-btn flash-off">⚡</button>
           </div>
         </div>
+
         <!-- Upload Photo Section -->
         <div id="uploadPhotoSection" class="photo-section" style="display:none;">
           <p>Please choose a photo to upload:</p>
@@ -67,6 +75,7 @@
           <label for="uploadInput" class="upload-label">Select Photo</label>
           <button type="button" class="backToOptions">← Back</button>
         </div>
+
         <!-- Paste URL Section -->
         <div id="urlPhotoSection" class="photo-section" style="display:none;">
           <p>Please enter the image URL:</p>
@@ -75,6 +84,7 @@
           <button type="button" id="loadUrlImage">Load Image</button>
           <button type="button" class="backToOptions">← Back</button>
         </div>
+
         <!-- Cropping Section -->
         <div id="cropSection" class="photo-section" style="display:none;">
           <p>Adjust the photo inside the square. Pinch to zoom and pan to frame your vehicle.</p>
@@ -97,6 +107,7 @@
         <p class="shortlink-label">Your shortlink:</p>
         <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
         <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
+        <!-- Final Image Display -->
         <div class="final-image-section">
           <p>Your chosen image:</p>
           <div id="finalImageContainer">
@@ -125,7 +136,7 @@
     </section>
   </div>
   <footer id="pageFooter">
-    <span class="footer-version">Version 2.5.1</span>
+    <span class="footer-version">Version 2.5.2</span>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
   <script src="start.js"></script>

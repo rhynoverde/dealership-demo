@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     hideAllPhotoSections();
     document.getElementById('photoOptions').style.display = 'block';
   });
-  // File Upload – load image into crop mode
+  // File Upload
   document.getElementById('uploadInput').addEventListener('change', e => {
     savedCanvasData = null;
     savedCropBoxData = null;
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
       reader.readAsDataURL(file);
     }
   });
-  // URL Input – load image URL into crop mode
+  // URL Input
   document.getElementById('loadUrlImage').addEventListener('click', () => {
     savedCanvasData = null;
     savedCropBoxData = null;
@@ -90,13 +90,13 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please enter a valid URL.');
     }
   });
-  // Capture Photo Button
+  // Capture Photo
   document.getElementById('capturePhoto').addEventListener('click', () => {
     savedCanvasData = null;
     savedCropBoxData = null;
     captureFromCamera();
   });
-  // Swap Camera Button
+  // Swap Camera
   document.getElementById('swapCamera').addEventListener('click', () => {
     currentCamera = currentCamera === "environment" ? "user" : "environment";
     stopCamera();
@@ -325,7 +325,6 @@ function captureFromCamera() {
   const container = document.getElementById('cameraContainer');
   const rect = container.getBoundingClientRect();
   const video = document.getElementById('cameraPreview');
-  // "Cover" scaling: calculate source rectangle from video to fill container
   let sx, sy, sWidth, sHeight;
   const containerRatio = rect.width / rect.height;
   const videoRatio = video.videoWidth / video.videoHeight;
@@ -340,18 +339,23 @@ function captureFromCamera() {
     sx = 0;
     sy = (video.videoHeight - sHeight) / 2;
   }
+  // Now, instead of 800x800 (2x), we use 1600x1600 (4x) for higher resolution
+  const captureWidth = 1600;
+  const captureHeight = 1600;
   const fullCanvas = document.createElement('canvas');
-  fullCanvas.width = rect.width;
-  fullCanvas.height = rect.height;
+  fullCanvas.width = captureWidth;
+  fullCanvas.height = captureHeight;
   const ctx = fullCanvas.getContext('2d');
-  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, rect.width, rect.height);
-  // The overlay hole is centered and 300x300 within a 400x400 container.
-  const offset = (rect.width - 300) / 2;
+  // Draw the video frame into our larger canvas using cover scaling:
+  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureWidth, captureHeight);
+  // Now, we want to crop a 1200x1200 region from the 1600x1600 canvas, centered.
+  const cropSize = 1200;
+  const cropOffset = (captureWidth - cropSize) / 2; // should be 200 if 1600x1600
   const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = 300;
-  cropCanvas.height = 300;
+  cropCanvas.width = cropSize;
+  cropCanvas.height = cropSize;
   const cropCtx = cropCanvas.getContext('2d');
-  cropCtx.drawImage(fullCanvas, offset, offset, 300, 300, 0, 0, 300, 300);
+  cropCtx.drawImage(fullCanvas, cropOffset, cropOffset, cropSize, cropSize, 0, 0, cropSize, cropSize);
   originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
   capturedDataUrl = cropCanvas.toDataURL('image/jpeg');
   croppedDataUrl = capturedDataUrl;
