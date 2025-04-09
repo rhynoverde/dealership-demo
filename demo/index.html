@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version 2.5.2 (4x Capture Resolution)</title>
-  <link rel="stylesheet" href="start.css" />
+  <title>Dealership Demo - Version d-2.5.2 (4x Capture Resolution)</title>
+  <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
 </head>
@@ -134,11 +134,42 @@
         <button type="button" id="startOver" class="start-over">Start Over</button>
       </div>
     </section>
+
+    <!-- New Section: Simulated Text Message -->
+    <section id="textMessagePage" class="step">
+      <div class="form-section">
+        <h2>Text Message</h2>
+        <div class="text-message-container">
+          <div class="received-message">
+            <p>Hey, check out this link to view your car details:</p>
+            <a href="#" id="messageLink">https://GetMy.Deal/MichaelJones</a>
+          </div>
+          <button type="button" id="backToStep3">← Back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- New Section: Share Page -->
+    <section id="sharePage" class="step">
+      <div class="form-section">
+        <h2>Share Your Car</h2>
+        <div class="share-image-container">
+          <img id="shareImage" src="https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=" alt="Share Image" />
+        </div>
+        <div class="share-buttons">
+          <button type="button" id="copyShareLink">Copy Link</button>
+          <button type="button" id="postImage">Post Image</button>
+        </div>
+        <button type="button" id="backToText">← Back to Text Message</button>
+      </div>
+    </section>
+
   </div>
   <footer id="pageFooter">
-    <span class="footer-version">Version 2.5.2</span>
+    <span class="footer-version">Version d-2.5.2</span>
   </footer>
+  <!-- Cropper.js -->
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
-  <script src="start.js"></script>
+  <script src="demo.js"></script>
 </body>
 </html>

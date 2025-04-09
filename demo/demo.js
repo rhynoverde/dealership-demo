@@ -199,38 +199,68 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('photoOptions').style.display = 'block';
     showStep('step2');
   });
-  // Share Buttons
+  // Share Buttons on Step 3
   document.getElementById('copyLink').addEventListener('click', () => {
     const linkText = document.getElementById('shortLink').innerText;
     navigator.clipboard.writeText(linkText).then(() => {
       alert('Link copied to clipboard.');
     });
   });
+  // NEW: Text Link now opens the text message simulation
   document.getElementById('textLink').addEventListener('click', () => {
-    alert('Simulating sending a text message.');
+    showStep('textMessagePage');
   });
+  // Email and Both Link buttons (simulate sending)
   document.getElementById('emailLink').addEventListener('click', () => {
     alert('Simulating sending an email.');
   });
   document.getElementById('bothLink').addEventListener('click', () => {
     alert('Simulating sending text and email.');
   });
+  // Show QR Code button
   document.getElementById('showQR').addEventListener('click', () => {
     const qr = document.getElementById('qrCode');
     qr.style.display = (qr.style.display === 'none' ? 'block' : 'none');
   });
+  // Copy prefilled Message
   document.getElementById('copyMessage').addEventListener('click', () => {
     const msg = document.getElementById('prefilledMessage');
     msg.select();
     document.execCommand('copy');
     alert('Message copied to clipboard.');
   });
+  // Start Over
   document.getElementById('startOver').addEventListener('click', () => {
     resetAll();
     showStep('step1');
     document.getElementById('photoOptions').style.display = 'block';
   });
+  
+  // NEW: In Text Message Page, Back button returns to step 3
+  document.getElementById('backToStep3').addEventListener('click', () => {
+    showStep('step3');
+  });
+  // NEW: In Text Message Page, clicking the link navigates to Share Page
+  document.getElementById('messageLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    showStep('sharePage');
+  });
+  // NEW: In Share Page, Copy Link button copies the fixed share link
+  document.getElementById('copyShareLink').addEventListener('click', () => {
+    navigator.clipboard.writeText("https://GetMy.Deal/MichaelJones").then(() => {
+      alert('Share link copied to clipboard.');
+    });
+  });
+  // NEW: In Share Page, Post Image button simulates posting the image
+  document.getElementById('postImage').addEventListener('click', () => {
+    alert('Simulating posting the image.');
+  });
+  // NEW: Back button from Share Page returns to Text Message Page
+  document.getElementById('backToText').addEventListener('click', () => {
+    showStep('textMessagePage');
+  });
 });
+
 function showStep(stepId) {
   document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
   document.getElementById(stepId).classList.add('active');
@@ -339,18 +369,17 @@ function captureFromCamera() {
     sx = 0;
     sy = (video.videoHeight - sHeight) / 2;
   }
-  // Now, instead of 800x800 (2x), we use 1600x1600 (4x) for higher resolution
+  // Use 1600x1600 (4x resolution) for higher quality
   const captureWidth = 1600;
   const captureHeight = 1600;
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = captureWidth;
   fullCanvas.height = captureHeight;
   const ctx = fullCanvas.getContext('2d');
-  // Draw the video frame into our larger canvas using cover scaling:
   ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureWidth, captureHeight);
-  // Now, we want to crop a 1200x1200 region from the 1600x1600 canvas, centered.
+  // Crop a centered 1200x1200 region from the 1600x1600 canvas
   const cropSize = 1200;
-  const cropOffset = (captureWidth - cropSize) / 2; // should be 200 if 1600x1600
+  const cropOffset = (captureWidth - cropSize) / 2;
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = cropSize;
   cropCanvas.height = cropSize;
