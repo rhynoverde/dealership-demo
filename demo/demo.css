@@ -342,26 +342,36 @@ textarea {
   display: block;
 }
 
-/* Extra Styles for Text Message & Share Page */
-.text-message-container {
+/* Extra Styles for Simulated Text Message Screen */
+.text-message-screen {
   background-color: #e0f7fa;
-  border: 1px solid #00acc1;
   border-radius: 8px;
   padding: 15px;
-  margin: 15px 0;
 }
-.text-message-container .received-message {
+.message-bubble {
   background-color: #fff;
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 15px;
+  padding: 15px;
   margin-bottom: 10px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.text-message-container a {
+.message-bubble p {
+  margin-bottom: 10px;
+}
+.message-bubble .sender {
+  font-weight: bold;
+}
+.message-bubble .signature {
+  font-style: italic;
+  color: #555;
+}
+.message-bubble .link a {
   color: #007BFF;
   text-decoration: underline;
   font-weight: bold;
 }
+
+/* Share Page Specific Styles */
 .share-image-container {
   text-align: center;
   margin-bottom: 15px;
@@ -371,4 +381,26 @@ textarea {
   max-width: 400px;
   border: 2px solid #ddd;
   border-radius: 4px;
+}
+.content {
+  text-align: center;
+}
+
+/* Main Button (for share) */
+.main-button {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+}
+.main-button:hover {
+  background-color: #c9302c;
 }

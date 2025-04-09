@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.5.2 (4x Capture Resolution)</title>
+  <title>Dealership Demo - Version d-2.6.1</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
+  <!-- Include SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <div class="container">
@@ -135,38 +137,35 @@
       </div>
     </section>
 
-    <!-- New Section: Simulated Text Message -->
+    <!-- New Section: Simulated Text Message (actual look like a messaging screen) -->
     <section id="textMessagePage" class="step">
-      <div class="form-section">
-        <h2>Text Message</h2>
-        <div class="text-message-container">
-          <div class="received-message">
-            <p>Hey, check out this link to view your car details:</p>
-            <a href="#" id="messageLink">https://GetMy.Deal/MichaelJones</a>
-          </div>
-          <button type="button" id="backToStep3">← Back</button>
+      <div class="form-section text-message-screen">
+        <div class="message-bubble received">
+          <p class="sender">ry,</p>
+          <p>Thanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!</p>
+          <p class="signature">Michael Jones<br>Demo Auto Sales</p>
+          <p class="link"><a href="#" id="messageLink">justshar.ing/xyz</a></p>
         </div>
+        <button type="button" id="backToStep3">← Back</button>
       </div>
     </section>
 
-    <!-- New Section: Share Page -->
+    <!-- New Section: Share Page with actual sharing functionality -->
     <section id="sharePage" class="step">
       <div class="form-section">
-        <h2>Share Your Car</h2>
+        <h2>Share your vehicle purchase!</h2>
         <div class="share-image-container">
-          <img id="shareImage" src="https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=" alt="Share Image" />
+          <img id="shareImage" src="" alt="Share Image" />
         </div>
-        <div class="share-buttons">
-          <button type="button" id="copyShareLink">Copy Link</button>
-          <button type="button" id="postImage">Post Image</button>
+        <div class="content">
+          <button id="shareButton" class="main-button">Share My Review Image</button>
         </div>
         <button type="button" id="backToText">← Back to Text Message</button>
       </div>
     </section>
-
   </div>
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.5.2</span>
+    <span class="footer-version">Version d-2.6.1</span>
   </footer>
   <!-- Cropper.js -->
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>

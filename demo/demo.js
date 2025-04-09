@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Link copied to clipboard.');
     });
   });
-  // NEW: Text Link now opens the text message simulation
+  // Text Link button now routes to simulated text message page
   document.getElementById('textLink').addEventListener('click', () => {
     showStep('textMessagePage');
   });
@@ -229,35 +229,81 @@ document.addEventListener('DOMContentLoaded', () => {
     document.execCommand('copy');
     alert('Message copied to clipboard.');
   });
-  // Start Over
+  // Start Over button
   document.getElementById('startOver').addEventListener('click', () => {
     resetAll();
     showStep('step1');
     document.getElementById('photoOptions').style.display = 'block';
   });
-  
-  // NEW: In Text Message Page, Back button returns to step 3
+  // In Text Message Page, Back button returns to step 3
   document.getElementById('backToStep3').addEventListener('click', () => {
     showStep('step3');
   });
-  // NEW: In Text Message Page, clicking the link navigates to Share Page
+  // In Text Message Page, clicking the link navigates to Share Page
   document.getElementById('messageLink').addEventListener('click', (e) => {
     e.preventDefault();
+    // When entering the share page, load the final image (if available)
+    if (croppedDataUrl) {
+      document.getElementById('shareImage').src = croppedDataUrl;
+    } else {
+      // Fallback to a default image
+      document.getElementById('shareImage').src = "https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=";
+    }
     showStep('sharePage');
   });
-  // NEW: In Share Page, Copy Link button copies the fixed share link
-  document.getElementById('copyShareLink').addEventListener('click', () => {
-    navigator.clipboard.writeText("https://GetMy.Deal/MichaelJones").then(() => {
-      alert('Share link copied to clipboard.');
-    });
-  });
-  // NEW: In Share Page, Post Image button simulates posting the image
-  document.getElementById('postImage').addEventListener('click', () => {
-    alert('Simulating posting the image.');
-  });
-  // NEW: Back button from Share Page returns to Text Message Page
+  // In Share Page, Back button returns to Text Message Page
   document.getElementById('backToText').addEventListener('click', () => {
     showStep('textMessagePage');
+  });
+  // NEW: Share Button on Share Page - actual sharing functionality
+  document.getElementById('shareButton').addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      // Copy the share link to clipboard automatically
+      await navigator.clipboard.writeText(shareLink);
+      // Show SweetAlert2 dialog with instructions
+      Swal.fire({
+        title: '<strong>Dealership Share Link Copied!</strong>',
+        html: `
+          <p>We copied the link to your clipboard. Please use it in your Instagram Story by adding a "LINK" sticker.</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste the link as a sticker in your Instagram Story.</li>
+            <li>😁 Use the link in your Instagram feed caption.</li>
+            <li>😃 Share via other social platforms.</li>
+          </ul>
+          <p>Thanks!</p>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Share Now',
+        cancelButtonText: 'Cancel',
+        customClass: {
+          confirmButton: 'swal2-confirm',
+          cancelButton: 'swal2-cancel'
+        }
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          if (croppedDataUrl && navigator.share) {
+            const blob = dataURLtoBlob(croppedDataUrl);
+            const file = new File([blob], "vehicle_review.jpg", { type: blob.type });
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'My Vehicle Purchase',
+                text: 'Check out my vehicle purchase review from Michael Jones at Demo Auto Sales!'
+              });
+            } catch (error) {
+              console.error('Error sharing:', error);
+            }
+          } else {
+            console.log('Web Share API not supported or image data missing.');
+          }
+        }
+      });
+    } catch (error) {
+      console.log('Error copying link or sharing:', error);
+    }
   });
 });
 
@@ -278,7 +324,7 @@ function resetPhotoProcess() {
   document.getElementById('imageUrlInput').value = '';
 }
 function setupPrefilledMessage() {
-  const msgTemplate = `${customerData.name},\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nToby\nDemo Auto Sales`;
+  const msgTemplate = `${customerData.name},\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nMichael Jones\nDemo Auto Sales`;
   document.getElementById('prefilledMessage').value = msgTemplate;
   document.getElementById('finalImage').src = croppedDataUrl;
 }
@@ -446,4 +492,18 @@ function resetAll() {
   document.getElementById('customerForm').reset();
   resetPhotoProcess();
   hideAllPhotoSections();
+}
+
+// Helper: Convert data URL to Blob
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(',');
+  const mimeMatch = arr[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : '';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], {type:mime});
 }
