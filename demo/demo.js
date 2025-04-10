@@ -16,7 +16,7 @@ let activePointers = new Map();
 let currentCamera = "environment";
 let currentScale = 1;
 let maxZoom = 1;
-let userReview = ""; // To store review text from the review form page
+let userReview = ""; // To store review text from the Review Form page
 let selectedRating = 0; // For star rating
 
 // =======================
@@ -190,7 +190,7 @@ function stopCamera() {
   }
 }
 
-// For "Take Photo": capture a frame using a 2160×1400 canvas, yielding a final image of 1080×700.
+// For "Take Photo": capture a frame using a 2160×1400 canvas to yield a final 1080×700 image.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -400,13 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('backToStep3')?.addEventListener('click', () => {
     showStep('step3');
   });
-
+  
   // QR Code Button – Show QR Page
   document.getElementById('showQRButton')?.addEventListener('click', () => {
     showQRPage();
   });
   
-  // Text Message Page – Clicking Link: Set Customer Share Image from Final Image and show Customer Share Page.
+  // Text Message Page – Clicking Link: Navigate to Customer Share Page (preserve the custom image)
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
     const finalImgSrc = document.getElementById('finalImage')?.src || "";
@@ -417,8 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('customerSharePage');
   });
   
-  // Customer Share Page – "Forward" Button: Navigate to Review Form Page and initialize star rating.
-  document.getElementById('backFromCustomerShare')?.addEventListener('click', () => {
+  // Customer Share Page – Forward Button: Navigate to Review Form Page
+  document.getElementById('forwardFromCustomerShare')?.addEventListener('click', () => {
     showStep('reviewFormPage');
     initStarRating();
   });
@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('reviewSharePage');
   });
   
-  // Update Character Count on Review Text Input
+  // Update Character Count for Review Text Input
   document.getElementById('reviewText')?.addEventListener('input', (e) => {
     const maxChars = 130;
     const currentLength = e.target.value.length;
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // REVIEW SHARE PAGE: Share Review Link Button Event (Copy link, show modal, then trigger native sharing on the review share image)
+  // REVIEW SHARE PAGE: Share Review Link Button Event
   document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -506,6 +506,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       alert("Failed to copy link");
     }
+  });
+  
+  // Review Share Page – Forward Button: Navigate to Google Review Page
+  document.getElementById('forwardFromReviewShare')?.addEventListener('click', () => {
+    showStep('googleReviewPage');
   });
   
   // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event

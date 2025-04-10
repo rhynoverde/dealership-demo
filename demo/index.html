@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.7b</title>
+  <title>Dealership Demo - Version d-2.6.8</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -128,21 +128,19 @@
       </div>
     </section>
     
-    <!-- Customer Share Page (for sharing the custom Hyperise image of the vehicle purchase) -->
+    <!-- Customer Share Page -->
     <section id="customerSharePage" class="step">
       <div class="form-section">
         <h2>Share Your Vehicle Purchase!</h2>
         <div class="share-image-container">
           <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <!-- The share button below triggers the share modal -->
         <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
-        <!-- Forward button: when pressed, moves to the Review Form Page -->
-        <button type="button" id="backFromCustomerShare">I already shared this > Forward</button>
+        <button type="button" id="forwardFromCustomerShare">I already shared this > Forward</button>
       </div>
     </section>
     
-    <!-- New: Review Form Page -->
+    <!-- Review Form Page -->
     <section id="reviewFormPage" class="step">
       <div class="form-section">
         <h2>Write a quick review for Michael Jones - Demo Auto Sales</h2>
@@ -159,7 +157,7 @@
       </div>
     </section>
     
-    <!-- New: Review Share Page -->
+    <!-- Review Share Page -->
     <section id="reviewSharePage" class="step">
       <div class="form-section">
         <h2>Share Your Review of Michael Jones - Demo Auto Sales</h2>
@@ -167,11 +165,12 @@
           <img id="reviewShareImage" src="" alt="Review Share Image" />
         </div>
         <button type="button" id="reviewShareButton" class="share-button">Share My Review Link</button>
+        <button type="button" id="forwardFromReviewShare">I already shared this > Forward</button>
         <button type="button" id="backFromReviewShare">← Back</button>
       </div>
     </section>
     
-    <!-- New: Google Review Page -->
+    <!-- Google Review Page -->
     <section id="googleReviewPage" class="step">
       <div class="form-section">
         <h2>Thank You!</h2>
@@ -180,7 +179,7 @@
       </div>
     </section>
     
-    <!-- New: Final Options Page -->
+    <!-- Final Options Page -->
     <section id="finalOptionsPage" class="step">
       <div class="form-section">
         <h2>WHEW! So much work, but what you did REALLY helps us!</h2>
@@ -196,7 +195,7 @@
       </div>
     </section>
     
-    <!-- New: QR Share Page -->
+    <!-- QR Share Page -->
     <section id="qrSharePage" class="step">
       <div class="form-section">
         <h2>Please Scan QR Code to Share!</h2>
