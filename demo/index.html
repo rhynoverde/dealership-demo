@@ -10,8 +10,6 @@
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
   <!-- Include SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Include AWS SDK for S3 (Backblaze S3 compatibility) -->
-  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.953.0.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -112,6 +110,7 @@
         <div class="final-buttons">
           <button type="button" id="textLink">Text Link</button>
           <button type="button" id="copyLink">Copy Link</button>
+          <button type="button" id="showQRButton">Show QR Code</button>
           <button type="button" id="startOver" class="start-over">Start Over</button>
         </div>
       </div>
@@ -140,6 +139,17 @@
         <!-- Single Share Now button that triggers native sharing -->
         <button type="button" id="shareNowButton" class="share-button">Share Now</button>
         <button type="button" id="backFromCustomerShare">← Back</button>
+      </div>
+    </section>
+    
+    <!-- QR Share Page (shows QR code for share link) -->
+    <section id="qrSharePage" class="step">
+      <div class="form-section">
+        <h2>Please Scan QR Code to Share!</h2>
+        <div class="qr-container">
+          <img id="qrCodeImage" src="" alt="QR Code" />
+        </div>
+        <button type="button" id="backFromQR">← Back</button>
       </div>
     </section>
   </div>

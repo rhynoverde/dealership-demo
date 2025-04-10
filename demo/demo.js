@@ -1,7 +1,7 @@
 // demo.js
 
 // === CONFIGURATION ===
-const IMGBB_API_KEY = 'd44d592f97ef193ce535a799d00ef632'; // <-- your imgbb API key
+const IMGBB_API_KEY = 'd44d592f97ef193ce535a799d00ef632'; // Your imgbb API key
 const FINAL_WIDTH = 1080;
 const FINAL_HEIGHT = 700;
 const ASPECT_RATIO = FINAL_WIDTH / FINAL_HEIGHT; // ~1.542857
@@ -32,8 +32,7 @@ function dataURLtoBlob(dataurl) {
 
 // === imgbb UPLOAD FUNCTION ===
 async function uploadToImgbb(dataUrl) {
-  // Remove the data header and get base64 string only.
-  const base64Image = dataUrl.split(',')[1];
+  const base64Image = dataUrl.split(',')[1]; // Remove data header
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', IMGBB_API_KEY);
@@ -42,14 +41,17 @@ async function uploadToImgbb(dataUrl) {
     method: 'POST',
     body: formData
   });
+  
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error('Upload to imgbb failed: ' + errText);
+    const errorText = await response.text();
+    throw new Error('Upload to imgbb failed: ' + errorText);
   }
+  
   const result = await response.json();
-  return result.data.display_url; // This is the public image URL from imgbb
+  return result.data.display_url;
 }
 
+// === DOM HELPERS ===
 function showStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
@@ -78,7 +80,16 @@ function setupPrefilledMessage() {
   if (msgField) msgField.value = msgTemplate;
 }
 
-// === NATIVE B2 CODE REMOVED; imgbb is used instead ===
+// === NEW: QR CODE PAGE FUNCTION ===
+function showQRPage() {
+  const shareLink = "https://GetMy.Deal/MichaelJones";
+  const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(shareLink);
+  const qrImg = document.getElementById("qrCodeImage");
+  if (qrImg) {
+    qrImg.src = qrUrl;
+  }
+  showStep("qrSharePage");
+}
 
 // === PINCH-ZOOM ON VIDEO ===
 function initPinchZoom(video) {
@@ -109,7 +120,7 @@ function initPinchZoom(video) {
       }
     }
   });
-  ['pointerup','pointercancel'].forEach(evt => {
+  ['pointerup', 'pointercancel'].forEach(evt => {
     video.addEventListener(evt, e => {
       e.preventDefault();
       activePointers.delete(e.pointerId);
@@ -147,47 +158,36 @@ function stopCamera() {
 }
 
 // === IMAGE CAPTURE & CROPPING ===
+// Capture using a canvas sized at 2160×1400 (2× final size) for correct ratio
 function captureFromCamera() {
-  const container = document.getElementById('cameraContainer');
-  const rect = container ? container.getBoundingClientRect() : null;
   const video = document.getElementById('cameraPreview');
-  if (!rect || !video) return;
-  let sx, sy, sWidth, sHeight;
-  const containerRatio = rect.width / rect.height;
-  const videoRatio = video.videoWidth / video.videoHeight;
-  if (videoRatio > containerRatio) {
-    sHeight = video.videoHeight;
-    sWidth = sHeight * containerRatio;
-    sx = (video.videoWidth - sWidth) / 2;
-    sy = 0;
-  } else {
-    sWidth = video.videoWidth;
-    sHeight = sWidth / containerRatio;
-    sx = 0;
-    sy = (video.videoHeight - sHeight) / 2;
-  }
-  const captureWidth = 1600;
-  const captureHeight = 1600;
+  if (!video) return;
+  const CAPTURE_WIDTH = 2160; // 2 x 1080
+  const CAPTURE_HEIGHT = 1400; // 2 x 700
   const fullCanvas = document.createElement('canvas');
-  fullCanvas.width = captureWidth;
-  fullCanvas.height = captureHeight;
+  fullCanvas.width = CAPTURE_WIDTH;
+  fullCanvas.height = CAPTURE_HEIGHT;
   const ctx = fullCanvas.getContext('2d');
   if (ctx) {
-    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureWidth, captureHeight);
+    // Cover the canvas – scale such that the image fills the canvas and crop excess.
+    const scale = Math.max(CAPTURE_WIDTH / video.videoWidth, CAPTURE_HEIGHT / video.videoHeight);
+    const newWidth = video.videoWidth * scale;
+    const newHeight = video.videoHeight * scale;
+    const offsetX = (CAPTURE_WIDTH - newWidth) / 2;
+    const offsetY = (CAPTURE_HEIGHT - newHeight) / 2;
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, offsetX, offsetY, newWidth, newHeight);
   }
-  const offsetX = (captureWidth - FINAL_WIDTH) / 2;
-  const offsetY = (captureHeight - FINAL_HEIGHT) / 2;
+  // Scale down to FINAL_WIDTH x FINAL_HEIGHT
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = FINAL_WIDTH;
   cropCanvas.height = FINAL_HEIGHT;
   const cropCtx = cropCanvas.getContext('2d');
   if (cropCtx) {
-    cropCtx.drawImage(fullCanvas, offsetX, offsetY, FINAL_WIDTH, FINAL_HEIGHT, 0, 0, FINAL_WIDTH, FINAL_HEIGHT);
+    cropCtx.drawImage(fullCanvas, 0, 0, CAPTURE_WIDTH, CAPTURE_HEIGHT, 0, 0, FINAL_WIDTH, FINAL_HEIGHT);
   }
   originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
   croppedDataUrl = cropCanvas.toDataURL('image/jpeg');
   stopCamera();
-  // Upload to imgbb and show final page.
   uploadToImgbb(croppedDataUrl)
     .then(publicUrl => {
       document.getElementById('finalImage').src =
@@ -218,7 +218,7 @@ function loadImageForCrop(src, isUrl = false) {
     zoomable: true,
     cropBoxResizable: false,
     cropBoxMovable: false,
-    ready() { /* Optional: set maxZoom if desired */ }
+    ready() {}
   });
 }
 
@@ -279,13 +279,14 @@ document.addEventListener('DOMContentLoaded', () => {
     loadImageForCrop(url, true);
   });
 
-  // Capture
+  // Capture Photo
   document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
 
   // Swap / flash
   document.getElementById('swapCamera')?.addEventListener('click', () => {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-    stopCamera(); startCamera();
+    stopCamera(); 
+    startCamera();
   });
   document.getElementById('flashToggle')?.addEventListener('click', e => {
     const btn = e.currentTarget;
@@ -301,7 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
     croppedDataUrl = canvas.toDataURL('image/jpeg');
-    cropper.destroy(); cropper = null;
+    cropper.destroy(); 
+    cropper = null;
     uploadToImgbb(croppedDataUrl)
       .then(publicUrl => {
         document.getElementById('finalImage').src =
@@ -318,12 +320,13 @@ document.addEventListener('DOMContentLoaded', () => {
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = FINAL_WIDTH; canvas.height = FINAL_HEIGHT;
+      canvas.width = FINAL_WIDTH; 
+      canvas.height = FINAL_HEIGHT;
       const ctx = canvas.getContext('2d');
-      const scaleCover = Math.max(FINAL_WIDTH/img.width, FINAL_HEIGHT/img.height);
+      const scaleCover = Math.max(FINAL_WIDTH / img.width, FINAL_HEIGHT / img.height);
       const coverWidth = img.width * scaleCover, coverHeight = img.height * scaleCover;
       const coverDx = (FINAL_WIDTH - coverWidth) / 2, coverDy = (FINAL_HEIGHT - coverHeight) / 2;
-      const scaleFit = Math.min(FINAL_WIDTH/img.width, FINAL_HEIGHT/img.height);
+      const scaleFit = Math.min(FINAL_WIDTH / img.width, FINAL_HEIGHT / img.height);
       const fitWidth = img.width * scaleFit, fitHeight = img.height * scaleFit;
       const fitDx = (FINAL_WIDTH - fitWidth) / 2, fitDy = (FINAL_HEIGHT - fitHeight) / 2;
       if (ctx) {
@@ -367,6 +370,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('step3');
   });
 
+  // QR Code button – show QR page
+  document.getElementById('showQRButton')?.addEventListener('click', () => {
+    showQRPage();
+  });
+
   // Text message page – clicking link goes to customer share page
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
@@ -379,11 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => alert(err));
   });
 
-  // Customer Share Page – Share Now button
+  // Customer Share Page – Share Now button triggers native share
   document.getElementById('shareNowButton')?.addEventListener('click', () => {
     if (!navigator.share) return alert('Share API not supported');
     const blob = dataURLtoBlob(croppedDataUrl);
-    const file = new File([blob], 'vehicle_review.jpg', { type: blob.type });
+    const file = new File([blob], "vehicle_review.jpg", { type: blob.type });
     navigator.share({
       files: [file],
       title: 'My Vehicle Purchase',
@@ -394,7 +402,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('textMessagePage');
   });
 
-  // Start over
+  // Back from QR page button
+  document.getElementById('backFromQR')?.addEventListener('click', () => {
+    showStep('step3');
+  });
+
+  // Start over button
   document.getElementById('startOver')?.addEventListener('click', () => {
     resetPhotoProcess();
     showStep('step1');
@@ -404,25 +417,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // === imgbb UPLOAD FUNCTION ===
 async function uploadToImgbb(dataUrl) {
-  const imgbbApiKey = 'd44d592f97ef193ce535a799d00ef632'; // Your imgbb API key
-  // Remove data header and get base64 string only
-  const base64Image = dataUrl.split(',')[1];
+  const imgbbApiKey = IMGBB_API_KEY;
+  const base64Image = dataUrl.split(',')[1]; // Remove the data header
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', imgbbApiKey);
+
   const response = await fetch('https://api.imgbb.com/1/upload', {
     method: 'POST',
     body: formData
   });
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error('Upload to imgbb failed: ' + errorText);
   }
+
   const result = await response.json();
   return result.data.display_url;
 }
 
-function getBlurredDataURL(img, blurAmount, width, height, callback) { callback(img); }
+function getBlurredDataURL(img, blurAmount, width, height, callback) {
+  callback(img);
+}
 
 function initPinchZoom(video) {
   activePointers.clear();
@@ -449,16 +466,23 @@ function initPinchZoom(video) {
       video.style.transform = `scale(${currentScale})`;
       if (zoomIndicator) {
         zoomIndicator.style.display = 'block';
-        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? 'Zooming In…' : 'Zooming Out…';
+        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? "Zooming In..." : "Zooming Out...";
       }
     }
   });
-  ['pointerup','pointercancel'].forEach(evt => {
-    video.addEventListener(evt, function(e) {
-      e.preventDefault();
-      activePointers.delete(e.pointerId);
-      if (activePointers.size < 2 && zoomIndicator) zoomIndicator.style.display = 'none';
-    });
+  video.addEventListener('pointerup', function(e) {
+    e.preventDefault();
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2 && zoomIndicator) {
+      zoomIndicator.style.display = "none";
+    }
+  });
+  video.addEventListener('pointercancel', function(e) {
+    e.preventDefault();
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2 && zoomIndicator) {
+      zoomIndicator.style.display = "none";
+    }
   });
 }
 

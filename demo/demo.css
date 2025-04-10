@@ -240,7 +240,7 @@ button:active {
   background-color: #ccc;
 }
 
-/* Cropping Section - adjust the container's height to reflect 1080x700 ratio (300px wide x ~194px high) */
+/* Cropping Section - container reflects 1080x700 ratio; for a 300px wide container, height ≈194px */
 #cropContainer {
   width: 300px;
   height: 194px;
@@ -339,6 +339,15 @@ button:active {
 }
 .share-button:hover {
   background-color: #005bb5;
+}
+
+/* QR Share Page */
+.qr-container {
+  text-align: center;
+  margin: 20px 0;
+}
+.qr-container img {
+  max-width: 150px;
 }
 
 /* Steps */
