@@ -120,7 +120,7 @@ function initPinchZoom(video) {
       }
     }
   });
-  ['pointerup', 'pointercancel'].forEach(evt => {
+  ['pointerup','pointercancel'].forEach(evt => {
     video.addEventListener(evt, e => {
       e.preventDefault();
       activePointers.delete(e.pointerId);
@@ -158,7 +158,7 @@ function stopCamera() {
 }
 
 // === IMAGE CAPTURE & CROPPING ===
-// Capture using a canvas sized at 2160×1400 (2× final size) for correct ratio
+// Capture using a canvas sized at 2160×1400 (2× final size) to get the correct 1080×700 ratio.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -169,7 +169,7 @@ function captureFromCamera() {
   fullCanvas.height = CAPTURE_HEIGHT;
   const ctx = fullCanvas.getContext('2d');
   if (ctx) {
-    // Cover the canvas – scale such that the image fills the canvas and crop excess.
+    // Use cover mode: scale the video frame so that it fills the canvas then center-crop.
     const scale = Math.max(CAPTURE_WIDTH / video.videoWidth, CAPTURE_HEIGHT / video.videoHeight);
     const newWidth = video.videoWidth * scale;
     const newHeight = video.videoHeight * scale;
@@ -177,7 +177,7 @@ function captureFromCamera() {
     const offsetY = (CAPTURE_HEIGHT - newHeight) / 2;
     ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, offsetX, offsetY, newWidth, newHeight);
   }
-  // Scale down to FINAL_WIDTH x FINAL_HEIGHT
+  // Scale down the fullCanvas to the desired FINAL_WIDTH x FINAL_HEIGHT.
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = FINAL_WIDTH;
   cropCanvas.height = FINAL_HEIGHT;
@@ -222,7 +222,7 @@ function loadImageForCrop(src, isUrl = false) {
   });
 }
 
-// === EVENT LISTENERS SETUP ===
+// === EVENT LISTENERS ===
 document.addEventListener('DOMContentLoaded', () => {
   // Step 1 → Step 2
   document.getElementById('toStep2')?.addEventListener('click', () => {
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('photoOptions').style.display = 'block';
   });
 
-  // File Upload
+  // File upload
   document.getElementById('uploadInput')?.addEventListener('change', e => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadImageForCrop(url, true);
   });
 
-  // Capture Photo
+  // Capture photo
   document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
 
   // Swap / flash
@@ -422,17 +422,17 @@ async function uploadToImgbb(dataUrl) {
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', imgbbApiKey);
-
+  
   const response = await fetch('https://api.imgbb.com/1/upload', {
     method: 'POST',
     body: formData
   });
-
+  
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error('Upload to imgbb failed: ' + errorText);
   }
-
+  
   const result = await response.json();
   return result.data.display_url;
 }

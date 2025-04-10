@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.1</title>
+  <title>Dealership Demo - Version d-2.6.2</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Step 1: Customer Info (Salesperson enters customer info) -->
+    <!-- Step 1: Customer Info -->
     <section id="step1" class="step active">
       <div class="form-section">
         <h2>Customer Information</h2>
@@ -29,7 +29,7 @@
       </div>
     </section>
     
-    <!-- Step 2: Photo Selection & Capture (Salesperson takes/uploads a photo) -->
+    <!-- Step 2: Photo Selection & Capture -->
     <section id="step2" class="step">
       <div class="form-section">
         <div id="photoOptions" class="photo-options">
@@ -52,6 +52,7 @@
           <div class="camera-header">
             <button type="button" id="cameraBack" class="back-btn">← Back</button>
           </div>
+          <!-- Updated container dimensions -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
@@ -98,7 +99,7 @@
       </div>
     </section>
     
-    <!-- Step 3: Salesperson Final Page (displays merged Hyperise image) -->
+    <!-- Step 3: Salesperson Final Page -->
     <section id="step3" class="step">
       <div class="form-section">
         <h2>Final Image Ready for Sharing</h2>
@@ -116,7 +117,7 @@
       </div>
     </section>
     
-    <!-- Simulated Text Message Page (salesperson simulation) -->
+    <!-- Simulated Text Message Page -->
     <section id="textMessagePage" class="step">
       <div class="form-section text-message-screen">
         <div class="message-bubble received">
@@ -129,20 +130,19 @@
       </div>
     </section>
     
-    <!-- Customer Share Page (when customer clicks link) -->
+    <!-- Customer Share Page -->
     <section id="customerSharePage" class="step">
       <div class="form-section">
         <h2>Share Your Vehicle Purchase!</h2>
         <div class="share-image-container">
           <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <!-- Single Share Now button that triggers native sharing -->
         <button type="button" id="shareNowButton" class="share-button">Share Now</button>
         <button type="button" id="backFromCustomerShare">← Back</button>
       </div>
     </section>
     
-    <!-- QR Share Page (shows QR code for share link) -->
+    <!-- QR Share Page -->
     <section id="qrSharePage" class="step">
       <div class="form-section">
         <h2>Please Scan QR Code to Share!</h2>
@@ -155,7 +155,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.1</span>
+    <span class="footer-version">Version d-2.6.2</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->
