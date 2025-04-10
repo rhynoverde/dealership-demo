@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.2</title>
+  <title>Dealership Demo - Version d-2.6.4</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -52,10 +52,11 @@
           <div class="camera-header">
             <button type="button" id="cameraBack" class="back-btn">← Back</button>
           </div>
-          <!-- Updated container dimensions -->
+          <!-- Camera container dimensions adjusted to 400×260 -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
+              <!-- Overlay "hole" now only has an outline (300×194) without dark shading -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -86,7 +87,7 @@
         
         <!-- Cropping Section -->
         <div id="cropSection" class="photo-section" style="display:none;">
-          <p>Adjust the photo inside the rectangle. Pinch to zoom and pan to frame your vehicle.</p>
+          <p>Adjust the photo if needed.</p>
           <div id="cropContainer">
             <img id="cropImage" src="" alt="To be cropped" />
           </div>
@@ -137,7 +138,9 @@
         <div class="share-image-container">
           <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <button type="button" id="shareNowButton" class="share-button">Share Now</button>
+        <!-- This page shows the hyperise image with personalization -->
+        <!-- The share button here copies the link and shows instructions -->
+        <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
         <button type="button" id="backFromCustomerShare">← Back</button>
       </div>
     </section>
@@ -155,7 +158,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.2</span>
+    <span class="footer-version">Version d-2.6.4</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->
