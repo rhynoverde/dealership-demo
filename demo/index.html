@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.7</title>
+  <title>Dealership Demo - Version d-2.6.7b</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -49,11 +49,11 @@
         
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <!-- Back button removed -->
+          <!-- Back button removed for simplicity -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
-              <!-- The overlay "hole" is hidden -->
+              <!-- Hidden overlay "hole" -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -128,6 +128,20 @@
       </div>
     </section>
     
+    <!-- Customer Share Page (for sharing the custom Hyperise image of the vehicle purchase) -->
+    <section id="customerSharePage" class="step">
+      <div class="form-section">
+        <h2>Share Your Vehicle Purchase!</h2>
+        <div class="share-image-container">
+          <img id="customerShareImage" src="" alt="Share Image" />
+        </div>
+        <!-- The share button below triggers the share modal -->
+        <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
+        <!-- Forward button: when pressed, moves to the Review Form Page -->
+        <button type="button" id="backFromCustomerShare">I already shared this > Forward</button>
+      </div>
+    </section>
+    
     <!-- New: Review Form Page -->
     <section id="reviewFormPage" class="step">
       <div class="form-section">
@@ -182,7 +196,7 @@
       </div>
     </section>
     
-    <!-- New: QR Share Page (unchanged) -->
+    <!-- New: QR Share Page -->
     <section id="qrSharePage" class="step">
       <div class="form-section">
         <h2>Please Scan QR Code to Share!</h2>
@@ -195,7 +209,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.7</span>
+    <span class="footer-version">Version d-2.6.7b</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->
