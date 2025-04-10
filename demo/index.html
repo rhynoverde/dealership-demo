@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.7.6</title>
+  <title>Dealership Demo - Version d-2.7.8</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -143,6 +143,10 @@
     <!-- Review Form Page -->
     <section id="reviewFormPage" class="step">
       <div class="form-section">
+        <div class="review-header">
+          <img src="https://dealershipdemo.embrfyr.com/images/SalesPersonTrimmedShort_600x605.png" alt="Salesperson" class="review-person">
+          <img src="https://dealershipdemo.embrfyr.com/images/DemoAutoSalesLogo.png" alt="Demo Auto Sales Logo" class="review-logo">
+        </div>
         <h2>Write a quick review for Michael Jones - Demo Auto Sales</h2>
         <div class="star-rating" id="reviewStarRating">
           <span data-value="1">&#9733;</span>
@@ -182,7 +186,7 @@
       </div>
     </section>
     
-    <!-- Final Options Page (WHEW page) with Accordion-style layout -->
+    <!-- Final Options Page (WHEW Page) with Accordion -->
     <section id="finalOptionsPage" class="step">
       <div class="form-section">
         <h2>WHEW! So much work, but what you did REALLY helps us!</h2>
@@ -215,7 +219,9 @@
     <!-- QR Share Page -->
     <section id="qrSharePage" class="step">
       <div class="form-section">
-        <h2>Please Scan QR Code to Share!</h2>
+        <h2>Scan Code to Share</h2>
+        <p>Use this QR code to share the link below with your customers:</p>
+        <p class="qr-link">justshar.ing/xyz</p>
         <div class="qr-container">
           <img id="qrCodeImage" src="" alt="QR Code" />
         </div>
@@ -225,7 +231,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.7.6</span>
+    <span class="footer-version">Version d-2.7.8</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

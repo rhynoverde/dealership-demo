@@ -58,7 +58,7 @@ function showStep(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.add('active');
-    // Populate Final Options Page when shown
+    // When entering the Final Options Page, populate final images and review text.
     if (id === 'finalOptionsPage') {
       const finalImage = document.getElementById('finalImage');
       const vehicleShareImg = document.getElementById('finalVehicleShareImage');
@@ -270,6 +270,16 @@ function loadImageForCrop(src, isUrl = false) {
   });
 }
 
+// Show QR Share Page by setting the QR code image via a public API.
+function showQRPage() {
+  const shareUrl = "justshar.ing/xyz";
+  const qrImage = document.getElementById('qrCodeImage');
+  if (qrImage) {
+    qrImage.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(shareUrl);
+  }
+  showStep('qrSharePage');
+}
+
 // =======================
 // EVENT LISTENERS SETUP
 // =======================
@@ -334,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Swap Camera / Flash Events
   document.getElementById('swapCamera')?.addEventListener('click', () => {
-    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    currentCamera = (currentCamera === 'environment') ? 'user' : 'environment';
     stopCamera();
     startCamera();
   });
@@ -347,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     track.applyConstraints({ advanced: [{ torch: on }] });
   });
   
-  // Crop → Upload & Show Final Page (Salesperson Final Page)
+  // Crop Button: Crop → Upload & Show Final Page (Salesperson Final Page)
   document.getElementById('cropButton')?.addEventListener('click', () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
@@ -422,12 +432,17 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('step3');
   });
   
-  // QR Code Button – Show QR Page
+  // QR Code Button – Show QR Page (calls our showQRPage function)
   document.getElementById('showQRButton')?.addEventListener('click', () => {
     showQRPage();
   });
   
-  // Text Message Page – Clicking Link: Copy final image to Vehicle Share Page and show it.
+  // QR Share Page – Back Button
+  document.getElementById('backFromQR')?.addEventListener('click', () => {
+    showStep('step3');
+  });
+  
+  // Text Message Page – Clicking Link: Set final image to Vehicle Share Page and show it.
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
     const finalImgSrc = document.getElementById('finalImage')?.src || "";
@@ -443,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
       await navigator.clipboard.writeText(shareLink);
+      // Show modal with instructions and contact link confirmation.
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
-          <p>Suggestions:</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link below has been copied to your clipboard; simply paste it in your post or story.</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -473,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
               console.error('Error sharing vehicle image', error);
             }
           } else {
-            console.log('Vehicle share image not found or Web Share API not supported.');
+            console.log('Final vehicle share image not found or Web Share API not supported.');
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           alert("For more instructions, please check our guidelines.");
@@ -526,8 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
-          <p>Suggestions:</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link below has been copied to your clipboard; simply paste it when sharing the image.</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -553,7 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
               console.error('Error sharing review image', error);
             }
           } else {
-            console.log('Review share image not found or Web Share API not supported.');
+            console.log('Final review share image not found or Web Share API not supported.');
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           alert("For more instructions, please check our guidelines.");
@@ -575,7 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('googleReviewPage');
   });
   
-  // GOOGLE REVIEW PAGE – "Paste Review on Google" Button Event (open in new tab, then forward)
+  // GOOGLE REVIEW PAGE – "Paste Review on Google" Button Event:
+  // Opens the Google review link in a new tab and then forwards to Final Options Page.
   document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
     const reviewTextElem = document.getElementById('reviewText');
     if (!reviewTextElem) return;
@@ -617,7 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE – When entering, populate final images and review text.
+  // FINAL OPTIONS PAGE – Populate final images and review text when the page loads.
   const finalImage = document.getElementById('finalImage');
   if (finalImage) {
     const vehicleShareImg = document.getElementById('finalVehicleShareImage');
@@ -643,8 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
-          <p>Suggestions:</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link has been copied to your clipboard; simply paste it in your post or story when sharing the image.</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -677,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } catch (err) {
-      alert("Failed to copy link");
+      alert("Failed to copy link: https://GetMy.Deal/MichaelJones");
     }
   });
   
@@ -689,8 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
-          <p>Suggestions:</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link has been copied to your clipboard; simply paste it when sharing the image.</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -723,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } catch (err) {
-      alert("Failed to copy link");
+      alert("Failed to copy link: https://GetMy.Deal/MichaelJones");
     }
   });
   
@@ -734,10 +747,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // FINAL OPTIONS PAGE – Simulated Text/Email Link Buttons
   document.getElementById('textLinkFinal')?.addEventListener('click', () => {
-    alert("Text with link to this share page sent!");
+    alert("Text with link to this share page sent! Link: https://GetMy.Deal/MichaelJones");
   });
   document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
-    alert("Email with link to this share page sent!");
+    alert("Email with link to this share page sent! Link: https://GetMy.Deal/MichaelJones");
   });
 });
 

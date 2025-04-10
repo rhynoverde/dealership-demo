@@ -462,3 +462,14 @@ button:active {
 #finalOptionsPage button {
   margin-top: 10px;
 }
+
+/* Shrink salesperson and logo on the Review Form Page */
+.review-header .review-person {
+  max-width: 120px;
+  margin: 0 auto 10px;
+}
+
+.review-header .review-logo {
+  max-width: 100px;
+  margin: 0 auto;
+}
