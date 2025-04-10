@@ -158,12 +158,12 @@ button:active {
   border-radius: 4px;
   cursor: pointer;
 }
-/* Camera container: 400x260 with 200px top margin */
+/* Camera container: 400px x 260px with 100px top margin */
 #cameraContainer {
   position: relative;
   width: 400px;
   height: 260px;
-  margin: 200px auto 15px;
+  margin: 100px auto 15px;
   background: #000;
   border-radius: 4px;
   overflow: hidden;
@@ -183,7 +183,7 @@ button:active {
   height: 100%;
   pointer-events: none;
 }
-/* Hide the overlay "hole" entirely */
+/* Hide the overlay "hole" */
 #cameraOverlay .hole {
   display: none;
 }
@@ -235,7 +235,7 @@ button:active {
   background-color: #ccc;
 }
 
-/* Cropping Section: 300x194 for 1080x700 final */
+/* Cropping Section (300px x 194px for 1080x700 final) */
 #cropContainer {
   width: 300px;
   height: 194px;

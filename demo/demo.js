@@ -16,9 +16,12 @@ let activePointers = new Map();
 let currentCamera = "environment";
 let currentScale = 1;
 let maxZoom = 1;
-let userReview = ""; // To store the review text from the Review Form page
+let userReview = ""; // To store review text from the Review Form page
 
-// === UTILITY FUNCTIONS ===
+// =======================
+// HELPER FUNCTIONS
+// =======================
+
 function dataURLtoBlob(dataurl) {
   const parts = dataurl.split(',');
   const mime = parts[0].match(/:(.*?);/)[1];
@@ -32,7 +35,7 @@ function dataURLtoBlob(dataurl) {
 }
 
 async function uploadToImgbb(dataUrl) {
-  const base64Image = dataUrl.split(',')[1]; // Remove the data header
+  const base64Image = dataUrl.split(',')[1]; // Remove header
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', IMGBB_API_KEY);
@@ -51,7 +54,6 @@ async function uploadToImgbb(dataUrl) {
   return result.data.display_url;
 }
 
-// === DOM HELPERS ===
 function showStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
@@ -80,7 +82,6 @@ function setupPrefilledMessage() {
   if (msgField) msgField.value = msgTemplate;
 }
 
-// === NEW: QR CODE PAGE FUNCTION ===
 function showQRPage() {
   const shareLink = "https://GetMy.Deal/MichaelJones";
   const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(shareLink);
@@ -91,56 +92,10 @@ function showQRPage() {
   showStep("qrSharePage");
 }
 
-// === EVENT LISTENER FOR "COPY LINK" & NATIVE SHARE (Customer Share Page) ===
-document.getElementById('shareNowButton')?.addEventListener('click', async () => {
-  const shareLink = "https://GetMy.Deal/MichaelJones";
-  try {
-    await navigator.clipboard.writeText(shareLink);
-    Swal.fire({
-      title: `<strong>Link Copied!</strong>`,
-      html: `
-        <p>Help friends and family contact him directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you will need to do is paste it in your post/story when you share the image!</p>
-        <p>Suggestions:</p>
-        <ul style="text-align: left;">
-          <li>😊 Paste it as a sticker in your Instagram Story.</li>
-          <li>😃 Paste it as a comment on your Facebook post.</li>
-          <li>😁 Use it in your TikTok bio.</li>
-        </ul>
-      `,
-      icon: 'success',
-      showCancelButton: true,
-      confirmButtonText: 'Got it!, Share Image Now',
-      cancelButtonText: 'More Instructions'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const finalImgSrc = document.getElementById('finalImage').src;
-        if (finalImgSrc && navigator.share) {
-          try {
-            const response = await fetch(finalImgSrc);
-            const blob = await response.blob();
-            const fileType = finalImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
-            const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
-            await navigator.share({
-              files: [file],
-              title: 'My Vehicle Purchase Review'
-              // No text description to maximize share options
-            });
-          } catch (error) {
-            console.error('Error sharing image', error);
-          }
-        } else {
-          console.log('Final image not found or Web Share API not supported.');
-        }
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
-      }
-    });
-  } catch (err) {
-    alert("Failed to copy link");
-  }
-});
+// =======================
+// CAMERA & IMAGE FUNCTIONS
+// =======================
 
-// === PINCH-ZOOM ON VIDEO ===
 function initPinchZoom(video) {
   activePointers.clear();
   let initialDistance = 0, initialScale = currentScale;
@@ -169,11 +124,10 @@ function initPinchZoom(video) {
       }
     }
   });
-  ['pointerup','pointercancel'].forEach(evt => {
+  ['pointerup', 'pointercancel'].forEach(evt => {
     video.addEventListener(evt, e => {
       e.preventDefault();
       activePointers.delete(e.pointerId);
-      const zoomIndicator = document.getElementById('zoomIndicator');
       if (activePointers.size < 2 && zoomIndicator) {
         zoomIndicator.style.display = 'none';
       }
@@ -181,7 +135,6 @@ function initPinchZoom(video) {
   });
 }
 
-// === CAMERA HANDLING ===
 function startCamera() {
   const video = document.getElementById('cameraPreview');
   currentScale = 1;
@@ -207,13 +160,12 @@ function stopCamera() {
   }
 }
 
-// === IMAGE CAPTURE & PROCESSING ===
-// For "Take Photo", capture using a 2160×1400 canvas to yield a 1080×700 final image.
+// For "Take Photo": capture from camera using a 2160x1400 canvas (to yield final image 1080x700)
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
-  const CAPTURE_WIDTH = 2160; // 2 × 1080
-  const CAPTURE_HEIGHT = 1400; // 2 × 700
+  const CAPTURE_WIDTH = 2160; // 2 x 1080
+  const CAPTURE_HEIGHT = 1400; // 2 x 700
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = CAPTURE_WIDTH;
   fullCanvas.height = CAPTURE_HEIGHT;
@@ -269,153 +221,11 @@ function loadImageForCrop(src, isUrl = false) {
   });
 }
 
-// === NEW: REVIEW FORM PAGE FUNCTIONALITY ===
-document.getElementById('submitReviewForm')?.addEventListener('click', () => {
-  // Get review from textarea and update character count if necessary.
-  const reviewTextElem = document.getElementById('reviewText');
-  if (!reviewTextElem) return;
-  const reviewValue = reviewTextElem.value.trim();
-  if (reviewValue.length === 0) {
-    alert("Please enter your review.");
-    return;
-  }
-  // Save user review for later use.
-  userReview = reviewValue;
-  // Build the personalized Review Share image URL using Hyperise parameters.
-  // The URL parameters: first_name (customerData.name) and job_title (review text).
-  const reviewShareUrl = `https://my.reviewshare.pics/i/pGdj8g8st.png?first_name=${encodeURIComponent(customerData.name)}&job_title=${encodeURIComponent(reviewValue)}`;
-  // Set the review share image source.
-  document.getElementById('reviewShareImage').src = reviewShareUrl;
-  // Navigate to the Review Share Page.
-  showStep('reviewSharePage');
-});
-
-// Update character count on review text input.
-document.getElementById('reviewText')?.addEventListener('input', (e) => {
-  const maxChars = 130;
-  const currentLength = e.target.value.length;
-  const remaining = maxChars - currentLength;
-  const charCountElem = document.getElementById('charCount');
-  if (charCountElem) {
-    charCountElem.textContent = `${remaining} characters left`;
-    if (remaining <= 0) {
-      charCountElem.classList.add('red');
-    } else {
-      charCountElem.classList.remove('red');
-    }
-  }
-});
-
-// === NEW: REVIEW SHARE PAGE FUNCTIONALITY ===
-document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
-  const shareLink = "https://GetMy.Deal/MichaelJones";
-  try {
-    await navigator.clipboard.writeText(shareLink);
-    Swal.fire({
-      title: `<strong>Link Copied!</strong>`,
-      html: `
-        <p>Help friends and family contact him directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you will need to do is paste it in your post/story when you share the image!</p>
-        <p>Suggestions:</p>
-        <ul style="text-align: left;">
-          <li>😊 Paste it as a sticker in your Instagram Story.</li>
-          <li>😃 Paste it as a comment on your Facebook post.</li>
-          <li>😁 Use it in your TikTok bio.</li>
-        </ul>
-      `,
-      icon: 'success',
-      showCancelButton: true,
-      confirmButtonText: 'Got it!, Share Image Now',
-      cancelButtonText: 'More Instructions'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        const reviewImgSrc = document.getElementById('reviewShareImage').src;
-        if (reviewImgSrc && navigator.share) {
-          try {
-            const response = await fetch(reviewImgSrc);
-            const blob = await response.blob();
-            const fileType = reviewImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
-            const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
-            await navigator.share({
-              files: [file],
-              title: 'My Review of Michael Jones - Demo Auto Sales'
-            });
-          } catch (error) {
-            console.error('Error sharing image', error);
-          }
-        } else {
-          console.log('Review image not found or Web Share API not supported.');
-        }
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
-      }
-    });
-  } catch (err) {
-    alert("Failed to copy link");
-  }
-});
-
-// === NEW: NAVIGATION FROM CUSTOMER SHARE PAGE TO REVIEW FORM PAGE ===
-// Instead of going back to the text message page, we now navigate to the review form page.
-document.getElementById('backFromCustomerShare')?.addEventListener('click', () => {
-  showStep('reviewFormPage');
-});
-
-// === NEW: GOOGLE REVIEW PAGE FUNCTIONALITY ===
-document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
-  // Copy user's review text to clipboard from the review text area.
-  const reviewTextElem = document.getElementById('reviewText');
-  if (!reviewTextElem) return;
-  const reviewTextValue = reviewTextElem.value.trim();
-  try {
-    await navigator.clipboard.writeText(reviewTextValue);
-    Swal.fire({
-      title: `<strong>Review Copied!</strong>`,
-      html: `
-        <p>Your review has been copied to your clipboard. We'd love if you included a photo of your car with the review.</p>
-        <p>Instructions:</p>
-        <ol style="text-align: left;">
-          <li>Add the photo of your car.</li>
-          <li>Tap your star rating.</li>
-          <li>Long press in the review box and select "paste".</li>
-        </ol>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Post Photo and Review on Google'
-    }).then(() => {
-      window.location.href = 'https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M';
-    });
-  } catch (err) {
-    alert("Failed to copy review text");
-  }
-});
-
-// === NEW: FINAL OPTIONS PAGE FUNCTIONALITY ===
-document.getElementById('copyReviewText')?.addEventListener('click', () => {
-  const finalReviewText = document.getElementById('finalReviewText')?.value;
-  if (!finalReviewText) return;
-  navigator.clipboard.writeText(finalReviewText).then(() => {
-    alert("Review text copied to clipboard.");
-  }).catch(() => {
-    alert("Failed to copy review text.");
-  });
-});
-document.getElementById('textLinkFinal')?.addEventListener('click', () => {
-  const currentUrl = window.location.href;
-  navigator.clipboard.writeText(currentUrl).then(() => {
-    alert("Page link copied to clipboard. We'll text you the link shortly.");
-  }).catch(() => {
-    alert("Failed to copy page link.");
-  });
-});
-document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
-  const subject = encodeURIComponent("Review & Share Page Link");
-  const body = encodeURIComponent(`Here is the link to the review share page: ${window.location.href}`);
-  window.location.href = `mailto:?subject=${subject}&body=${body}`;
-});
-
-// === EVENT LISTENERS SETUP (existing parts) ===
+// =======================
+// EVENT LISTENERS SETUP
+// =======================
 document.addEventListener('DOMContentLoaded', () => {
-  // Step 1 → Step 2
+  // Step 1 → Step 2: Customer Info Submission
   document.getElementById('toStep2')?.addEventListener('click', () => {
     const name = document.getElementById('customerName')?.value.trim();
     if (!name) return alert('Please enter the customer name.');
@@ -442,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Back-to-options
+  // Back-to-options buttons (for upload and URL sections)
   document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
       resetPhotoProcess();
@@ -454,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('photoOptions').style.display = 'block';
   });
 
-  // File Upload
+  // File Upload event
   document.getElementById('uploadInput')?.addEventListener('change', e => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -463,17 +273,17 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsDataURL(file);
   });
 
-  // Paste URL
+  // Paste URL event
   document.getElementById('loadUrlImage')?.addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput')?.value.trim();
     if (!url) return alert('Please enter a valid URL.');
     loadImageForCrop(url, true);
   });
 
-  // Capture Photo
+  // Capture Photo event (calls captureFromCamera)
   document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
 
-  // Swap / flash
+  // Swap camera / flash events
   document.getElementById('swapCamera')?.addEventListener('click', () => {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
     stopCamera();
@@ -488,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     track.applyConstraints({ advanced: [{ torch: on }] });
   });
 
-  // Crop → upload & show final page (for uploads/cropping)
+  // Crop → upload & show final page (if cropping is used)
   document.getElementById('cropButton')?.addEventListener('click', () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
@@ -505,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => alert(err));
   });
 
-  // Fit Entire Image
+  // Fit Entire Image event
   document.getElementById('fitEntireButton')?.addEventListener('click', () => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
@@ -546,38 +356,177 @@ document.addEventListener('DOMContentLoaded', () => {
     img.src = originalCapturedDataUrl || croppedDataUrl;
   });
 
-  // Change Photo
+  // Change Photo event
   document.getElementById('changePhoto')?.addEventListener('click', () => {
     resetPhotoProcess();
     document.getElementById('photoOptions').style.display = 'block';
     showStep('step2');
   });
 
-  // Salesperson Final Page – Text Link shows simulated SMS
+  // Salesperson Final Page – Text Link
   document.getElementById('textLink')?.addEventListener('click', () => {
     showStep('textMessagePage');
   });
   document.getElementById('backToStep3')?.addEventListener('click', () => {
     showStep('step3');
   });
+  
   // QR Code button – show QR page
   document.getElementById('showQRButton')?.addEventListener('click', () => {
     showQRPage();
   });
-  // Text Message Page – clicking link goes to Customer Share Page
+  
+  // Text Message Page – clicking link goes to Review Form Page (instead of trying to upload)
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
-    uploadToImgbb(croppedDataUrl)
-      .then(publicUrl => {
-        document.getElementById('customerShareImage').src =
-          'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
-        showStep('customerSharePage');
-      })
-      .catch(err => alert(err));
+    showStep('reviewFormPage');
+  });
+
+  // REVIEW FORM PAGE: Submit review form event
+  document.getElementById('submitReviewForm')?.addEventListener('click', () => {
+    const reviewTextElem = document.getElementById('reviewText');
+    if (!reviewTextElem) return;
+    const reviewValue = reviewTextElem.value.trim();
+    if (reviewValue.length === 0) {
+      alert("Please enter your review.");
+      return;
+    }
+    userReview = reviewValue;
+    // Build personalized Review Share image URL with Hyperise parameters:
+    // first_name from customerData.name and job_title from review
+    const reviewShareUrl = `https://my.reviewshare.pics/i/pGdj8g8st.png?first_name=${encodeURIComponent(customerData.name)}&job_title=${encodeURIComponent(reviewValue)}`;
+    const reviewShareImageElem = document.getElementById('reviewShareImage');
+    if (reviewShareImageElem) {
+      reviewShareImageElem.src = reviewShareUrl;
+    }
+    showStep('reviewSharePage');
+  });
+  
+  // Update character count on review text input
+  document.getElementById('reviewText')?.addEventListener('input', (e) => {
+    const maxChars = 130;
+    const currentLength = e.target.value.length;
+    const remaining = maxChars - currentLength;
+    const charCountElem = document.getElementById('charCount');
+    if (charCountElem) {
+      charCountElem.textContent = `${remaining} characters left`;
+      if (remaining <= 0) {
+        charCountElem.classList.add('red');
+      } else {
+        charCountElem.classList.remove('red');
+      }
+    }
+  });
+  
+  // REVIEW SHARE PAGE: Share Review Link event
+  document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      Swal.fire({
+        title: `<strong>Link Copied!</strong>`,
+        html: `
+          <p>Help friends and family contact him directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste it as a sticker in your Instagram Story.</li>
+            <li>😃 Paste it as a comment on your Facebook post.</li>
+            <li>😁 Use it in your TikTok bio.</li>
+          </ul>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Got it!, Share Image Now',
+        cancelButtonText: 'More Instructions'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const reviewImgElement = document.getElementById('reviewShareImage');
+          const reviewImgSrc = reviewImgElement ? reviewImgElement.src : "";
+          if (reviewImgSrc && navigator.share) {
+            try {
+              const response = await fetch(reviewImgSrc);
+              const blob = await response.blob();
+              const fileType = reviewImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+              const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
+              await navigator.share({
+                files: [file],
+                title: 'My Review of Michael Jones - Demo Auto Sales'
+              });
+            } catch (error) {
+              console.error('Error sharing image', error);
+            }
+          } else {
+            console.log('Review image not found or Web Share API not supported.');
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
+        }
+      });
+    } catch (err) {
+      alert("Failed to copy link");
+    }
+  });
+  
+  // Navigation: From Customer Share Page back to Review Form Page
+  document.getElementById('backFromCustomerShare')?.addEventListener('click', () => {
+    showStep('reviewFormPage');
+  });
+  
+  // GOOGLE REVIEW PAGE event: Copy review text and redirect
+  document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
+    const reviewTextElem = document.getElementById('reviewText');
+    if (!reviewTextElem) return;
+    const reviewTextValue = reviewTextElem.value.trim();
+    try {
+      await navigator.clipboard.writeText(reviewTextValue);
+      Swal.fire({
+        title: `<strong>Review Copied!</strong>`,
+        html: `
+          <p>Your review has been copied to your clipboard. Please paste it on our Google profile.</p>
+          <ol style="text-align: left;">
+            <li>Add your car photo if desired.</li>
+            <li>Tap on your star rating.</li>
+            <li>Long press in the review box and select "paste".</li>
+          </ol>
+        `,
+        icon: 'info',
+        confirmButtonText: 'Post Review on Google'
+      }).then(() => {
+        window.location.href = 'https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M';
+      });
+    } catch (err) {
+      alert("Failed to copy review text");
+    }
+  });
+  
+  // FINAL OPTIONS PAGE events
+  document.getElementById('copyReviewText')?.addEventListener('click', () => {
+    const finalReviewText = document.getElementById('finalReviewText')?.value;
+    if (!finalReviewText) return;
+    navigator.clipboard.writeText(finalReviewText).then(() => {
+      alert("Review text copied to clipboard.");
+    }).catch(() => {
+      alert("Failed to copy review text.");
+    });
+  });
+  document.getElementById('textLinkFinal')?.addEventListener('click', () => {
+    const currentUrl = window.location.href;
+    navigator.clipboard.writeText(currentUrl).then(() => {
+      alert("Page link copied to clipboard. We'll text you the link shortly.");
+    }).catch(() => {
+      alert("Failed to copy page link.");
+    });
+  });
+  document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
+    const subject = encodeURIComponent("Review & Share Page Link");
+    const body = encodeURIComponent(`Here is the link to the review share page: ${window.location.href}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
   });
 });
-  
-// === END OF EVENT LISTENERS ===
+
+// =======================
+// END OF EVENT LISTENERS
+// =======================
 
 function getBlurredDataURL(img, blurAmount, width, height, callback) {
   callback(img);
