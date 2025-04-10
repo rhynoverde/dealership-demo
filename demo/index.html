@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.7.3</title>
+  <title>Dealership Demo - Version d-2.7.4</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -46,14 +46,13 @@
             <span class="label">Paste Image URL</span>
           </button>
         </div>
-        
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <!-- Back button removed for simplicity -->
+          <!-- (No back button for simplicity) -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
-              <!-- Hidden overlay "hole" -->
+              <!-- Hidden overlay -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -64,7 +63,6 @@
             <button type="button" id="flashToggle" class="icon-btn flash-off">⚡</button>
           </div>
         </div>
-        
         <!-- Upload Photo Section -->
         <div id="uploadPhotoSection" class="photo-section" style="display:none;">
           <p>Please choose a photo to upload:</p>
@@ -72,7 +70,6 @@
           <label for="uploadInput" class="upload-label">Select Photo</label>
           <button type="button" class="backToOptions">← Back</button>
         </div>
-        
         <!-- Paste URL Section -->
         <div id="urlPhotoSection" class="photo-section" style="display:none;">
           <p>Please enter the image URL:</p>
@@ -81,7 +78,6 @@
           <button type="button" id="loadUrlImage">Load Image</button>
           <button type="button" class="backToOptions">← Back</button>
         </div>
-        
         <!-- Cropping Section -->
         <div id="cropSection" class="photo-section" style="display:none;">
           <p>Adjust the photo if needed.</p>
@@ -188,7 +184,6 @@
       <div class="form-section">
         <h2>WHEW! So much work, but what you did REALLY helps us!</h2>
         <p>If you would like to post or save your share images or review anywhere else, here they are:</p>
-        <!-- Two share images and their share buttons -->
         <div class="share-image-container">
           <h3>Vehicle Share Image</h3>
           <img id="finalVehicleShareImage" src="" alt="Final Vehicle Share Image" />
@@ -221,7 +216,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.7.3</span>
+    <span class="footer-version">Version d-2.7.4</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

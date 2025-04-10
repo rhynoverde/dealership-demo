@@ -1,7 +1,7 @@
 // demo.js
 
 // === CONFIGURATION ===
-const IMGBB_API_KEY = 'd44d592f97ef193ce535a799d00ef632'; // Your imgbb API key
+const IMGBB_API_KEY = 'd44d592f97ef193ce535a799d00ef632';
 const FINAL_WIDTH = 1080;
 const FINAL_HEIGHT = 700;
 const ASPECT_RATIO = FINAL_WIDTH / FINAL_HEIGHT; // ≈1.542857
@@ -16,9 +16,9 @@ let activePointers = new Map();
 let currentCamera = "environment";
 let currentScale = 1;
 let maxZoom = 1;
-let userReview = ""; // To store review text from the Review Form page
-let selectedRating = 0; // For star rating
-let uploadedVehicleUrl = ""; // To store the imgbb URL
+let userReview = "";
+let selectedRating = 0;
+let uploadedVehicleUrl = ""; // Stores imgbb URL for vehicle image
 
 // =======================
 // UTILITY FUNCTIONS
@@ -36,7 +36,7 @@ function dataURLtoBlob(dataurl) {
 }
 
 async function uploadToImgbb(dataUrl) {
-  const base64Image = dataUrl.split(',')[1]; // Remove header
+  const base64Image = dataUrl.split(',')[1];
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', IMGBB_API_KEY);
@@ -45,12 +45,10 @@ async function uploadToImgbb(dataUrl) {
     method: 'POST',
     body: formData
   });
-  
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error('Upload to imgbb failed: ' + errorText);
   }
-  
   const result = await response.json();
   return result.data.display_url;
 }
@@ -84,7 +82,7 @@ function setupPrefilledMessage() {
 }
 
 // =======================
-// STAR RATING FUNCTIONS (Review Form)
+// STAR RATING FUNCTIONS
 // =======================
 function initStarRating() {
   const starContainer = document.getElementById('reviewStarRating');
@@ -191,12 +189,12 @@ function stopCamera() {
   }
 }
 
-// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final 1080×700 image.
+// Capture photo from camera using a 2160×1400 canvas, then crop to FINAL_WIDTH x FINAL_HEIGHT.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
-  const CAPTURE_WIDTH = 2160; // 2 × 1080
-  const CAPTURE_HEIGHT = 1400; // 2 × 700
+  const CAPTURE_WIDTH = 2160;
+  const CAPTURE_HEIGHT = 1400;
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = CAPTURE_WIDTH;
   fullCanvas.height = CAPTURE_HEIGHT;
@@ -221,7 +219,7 @@ function captureFromCamera() {
   stopCamera();
   uploadToImgbb(croppedDataUrl)
     .then(publicUrl => {
-      uploadedVehicleUrl = publicUrl;  // Save for Google modal use
+      uploadedVehicleUrl = publicUrl;
       document.getElementById('finalImage').src =
         'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
       showStep('step3');
@@ -257,7 +255,7 @@ function loadImageForCrop(src, isUrl = false) {
 // EVENT LISTENERS SETUP
 // =======================
 document.addEventListener('DOMContentLoaded', () => {
-  // Step 1 → Step 2: Customer Info Submission
+  // Customer Info submission → Step 2
   document.getElementById('toStep2')?.addEventListener('click', () => {
     const name = document.getElementById('customerName')?.value.trim();
     if (!name) return alert('Please enter the customer name.');
@@ -284,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   
-  // Back-to-Options Buttons (for Upload and URL sections)
+  // Back-to-Options Buttons for Upload/URL sections
   document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
       resetPhotoProcess();
@@ -451,9 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const blob = await response.blob();
               const fileType = vehicleImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
               const file = new File([blob], `vehicle.${fileType.split('/')[1]}`, { type: fileType });
-              await navigator.share({
-                files: [file]
-              });
+              await navigator.share({ files: [file] });
             } catch (error) {
               console.error('Error sharing vehicle image', error);
             }
@@ -490,7 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     userReview = reviewValue;
-    // Build personalized Review Share image URL using Hyperise parameters.
     const reviewShareUrl = `https://my.reviewshare.pics/i/pGdj8g8st.png?first_name=${encodeURIComponent(customerData.name)}&job_title=${encodeURIComponent(reviewValue)}`;
     const reviewShareImageElem = document.getElementById('reviewShareImage');
     if (reviewShareImageElem) {
@@ -534,9 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const blob = await response.blob();
               const fileType = reviewImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
               const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
-              await navigator.share({
-                files: [file]
-              });
+              await navigator.share({ files: [file] });
             } catch (error) {
               console.error('Error sharing review image', error);
             }
@@ -570,7 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewTextValue = reviewTextElem.value.trim();
     try {
       await navigator.clipboard.writeText(reviewTextValue);
-      // In the modal, include the imgbb photo (using uploadedVehicleUrl) so the user can long press it to save.
       Swal.fire({
         title: `<strong>Review Copied!</strong>`,
         html: `
@@ -587,7 +579,6 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmButtonText: 'Post Review on Google'
       }).then(() => {
         window.open('https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M', '_blank');
-        // Forward to Final Options Page after a short delay
         setTimeout(() => {
           showStep('finalOptionsPage');
         }, 1000);
@@ -607,7 +598,25 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE – Share Vehicle Image Button (Native share)
+  // FINAL OPTIONS PAGE – When loading, populate final images and review text.
+  const finalImage = document.getElementById('finalImage');
+  if (finalImage) {
+    const vehicleShareImg = document.getElementById('finalVehicleShareImage');
+    if (vehicleShareImg) {
+      vehicleShareImg.src = finalImage.src;
+    }
+    const reviewShareImg = document.getElementById('finalReviewShareImage');
+    const reviewShareImageElem = document.getElementById('reviewShareImage');
+    if (reviewShareImg && reviewShareImageElem) {
+      reviewShareImg.src = reviewShareImageElem.src;
+    }
+    const finalReviewTextElem = document.getElementById('finalReviewText');
+    if (finalReviewTextElem) {
+      finalReviewTextElem.value = userReview;
+    }
+  }
+  
+  // FINAL OPTIONS PAGE – Share Vehicle Image Button Event (native share)
   document.getElementById('shareVehicleFinalButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -653,5 +662,140 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // FINAL OPTIONS PAGE – Share Review Image Button (Native share)
-  document.getElementById('shareReview
+  // FINAL OPTIONS PAGE – Share Review Image Button Event (native share)
+  document.getElementById('shareReviewFinalButton')?.addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      Swal.fire({
+        title: `<strong>Contact Link Saved to Clipboard!</strong>`,
+        html: `
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste it as a sticker in your Instagram Story.</li>
+            <li>😃 Paste it as a comment on your Facebook post.</li>
+            <li>😁 Use it in your TikTok bio.</li>
+          </ul>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Got it!, Share Image Now',
+        cancelButtonText: 'More Instructions'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const reviewImgElement = document.getElementById('finalReviewShareImage');
+          const reviewImgSrc = reviewImgElement ? reviewImgElement.src : "";
+          if (reviewImgSrc && navigator.share) {
+            try {
+              const response = await fetch(reviewImgSrc);
+              const blob = await response.blob();
+              const fileType = reviewImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+              const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
+              await navigator.share({ files: [file] });
+            } catch (error) {
+              console.error('Error sharing review image', error);
+            }
+          } else {
+            console.log('Final review share image not found or Web Share API not supported.');
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          alert("For more instructions, please check our guidelines.");
+        }
+      });
+    } catch (err) {
+      alert("Failed to copy link");
+    }
+  });
+  
+  // FINAL OPTIONS PAGE – Back Button: Navigate back to Google Review Page.
+  document.getElementById('backFromFinalOptions')?.addEventListener('click', () => {
+    showStep('googleReviewPage');
+  });
+  
+  // FINAL OPTIONS PAGE – Simulated Text/Email Link Buttons
+  document.getElementById('textLinkFinal')?.addEventListener('click', () => {
+    alert("Text with link to this share page sent!");
+  });
+  document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
+    alert("Email with link to this share page sent!");
+  });
+});
+
+// =======================
+// END OF EVENT LISTENERS
+// =======================
+
+function getBlurredDataURL(img, blurAmount, width, height, callback) {
+  callback(img);
+}
+
+function initPinchZoom(video) {
+  activePointers.clear();
+  let initialDistance = 0;
+  let initialScale = currentScale;
+  const zoomIndicator = document.getElementById('zoomIndicator');
+  video.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      initialScale = currentScale;
+    }
+  });
+  video.addEventListener('pointermove', function(e) {
+    e.preventDefault();
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      currentScale = initialScale * (newDist / initialDistance);
+      video.style.transform = `scale(${currentScale})`;
+      if (zoomIndicator) {
+        zoomIndicator.style.display = 'block';
+        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? "Zooming In..." : "Zooming Out...";
+      }
+    }
+  });
+  video.addEventListener('pointerup', function(e) {
+    e.preventDefault();
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2 && zoomIndicator) {
+      zoomIndicator.style.display = "none";
+    }
+  });
+  video.addEventListener('pointercancel', function(e) {
+    e.preventDefault();
+    activePointers.delete(e.pointerId);
+    if (activePointers.size < 2 && zoomIndicator) {
+      zoomIndicator.style.display = "none";
+    }
+  });
+}
+
+function startCamera() {
+  const video = document.getElementById('cameraPreview');
+  currentScale = 1;
+  if (video) video.style.transform = `scale(${currentScale})`;
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
+      .then(function(stream) {
+        cameraStream = stream;
+        if (video) {
+          video.srcObject = stream;
+          video.play();
+          initPinchZoom(video);
+        }
+      })
+      .catch(function(err) { alert('Camera access denied or not available.'); });
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
+}
