@@ -426,3 +426,39 @@ button:active {
 .step.active {
   display: block;
 }
+
+/* Accordion styles for Final Options Page */
+.accordion details {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.accordion summary {
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+}
+
+.accordion .accordion-content {
+  margin-top: 10px;
+}
+
+/* Make the share images in Final Options Page smaller */
+.accordion .share-image-container img {
+  max-width: 200px;
+  height: auto;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+/* Spacing for buttons on Final Options Page */
+#finalOptionsPage .share-button {
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+
+#finalOptionsPage button {
+  margin-top: 10px;
+}

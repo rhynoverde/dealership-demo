@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.7.5</title>
+  <title>Dealership Demo - Version d-2.7.6</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -49,7 +49,6 @@
         
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <!-- Back button removed for simplicity -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
@@ -183,20 +182,26 @@
       </div>
     </section>
     
-    <!-- Final Options Page -->
+    <!-- Final Options Page (WHEW page) with Accordion-style layout -->
     <section id="finalOptionsPage" class="step">
       <div class="form-section">
         <h2>WHEW! So much work, but what you did REALLY helps us!</h2>
         <p>If you would like to post or save your share images or review anywhere else, here they are:</p>
-        <div class="share-image-container">
-          <h3>Vehicle Share Image</h3>
-          <img id="finalVehicleShareImage" src="" alt="Final Vehicle Share Image" />
-          <button type="button" id="shareVehicleFinalButton" class="share-button">Share Vehicle Image</button>
-        </div>
-        <div class="share-image-container">
-          <h3>Review Share Image</h3>
-          <img id="finalReviewShareImage" src="" alt="Final Review Share Image" />
-          <button type="button" id="shareReviewFinalButton" class="share-button">Share Review Image</button>
+        <div class="accordion">
+          <details>
+            <summary>Vehicle Share Image</summary>
+            <div class="share-image-container accordion-content">
+              <img id="finalVehicleShareImage" src="" alt="Final Vehicle Share Image" />
+              <button type="button" id="shareVehicleFinalButton" class="share-button">Share Vehicle Image</button>
+            </div>
+          </details>
+          <details>
+            <summary>Review Share Image</summary>
+            <div class="share-image-container accordion-content">
+              <img id="finalReviewShareImage" src="" alt="Final Review Share Image" />
+              <button type="button" id="shareReviewFinalButton" class="share-button">Share Review Image</button>
+            </div>
+          </details>
         </div>
         <textarea id="finalReviewText" placeholder="Your review will appear here..."></textarea>
         <button type="button" id="copyReviewText">Copy Review Text</button>
@@ -220,7 +225,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.7.5</span>
+    <span class="footer-version">Version d-2.7.6</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

@@ -18,7 +18,7 @@ let currentScale = 1;
 let maxZoom = 1;
 let userReview = "";
 let selectedRating = 0;
-let uploadedVehicleUrl = ""; // Stores the imgbb URL for vehicle image
+let uploadedVehicleUrl = ""; // Stores the imgbb URL for the vehicle image
 
 // =======================
 // UTILITY FUNCTIONS
@@ -58,7 +58,7 @@ function showStep(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.add('active');
-    // If finalOptionsPage, populate with final images and review text.
+    // Populate Final Options Page when shown
     if (id === 'finalOptionsPage') {
       const finalImage = document.getElementById('finalImage');
       const vehicleShareImg = document.getElementById('finalVehicleShareImage');
@@ -592,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <li>Long press in the review box and select "paste".</li>
           </ol>
           <p><strong>Tip:</strong> Long press the image below to save it to your device and share it along with your review.</p>
-          <img src="${uploadedVehicleUrl ? uploadedVehicleUrl : ''}" alt="Vehicle Photo" style="max-width:100%; margin-top:10px;">
+          <img src="${uploadedVehicleUrl ? uploadedVehicleUrl : 'https://via.placeholder.com/200'}" alt="Vehicle Photo" style="max-width:100%; margin-top:10px;">
         `,
         icon: 'info',
         confirmButtonText: 'Post Review on Google'
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE – When entering this page, populate final images and review text.
+  // FINAL OPTIONS PAGE – When entering, populate final images and review text.
   const finalImage = document.getElementById('finalImage');
   if (finalImage) {
     const vehicleShareImg = document.getElementById('finalVehicleShareImage');
