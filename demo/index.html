@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.8</title>
+  <title>Dealership Demo - Version d-2.7.0</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -128,15 +128,16 @@
       </div>
     </section>
     
-    <!-- Customer Share Page -->
-    <section id="customerSharePage" class="step">
+    <!-- Vehicle Share Page -->
+    <section id="vehicleSharePage" class="step">
       <div class="form-section">
         <h2>Share Your Vehicle Purchase!</h2>
         <div class="share-image-container">
-          <img id="customerShareImage" src="" alt="Share Image" />
+          <img id="vehicleShareImage" src="" alt="Vehicle Share Image" />
         </div>
         <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
-        <button type="button" id="forwardFromCustomerShare">I already shared this > Forward</button>
+        <button type="button" id="forwardFromVehicleShare">I already shared this > Forward</button>
+        <button type="button" id="backFromVehicleShare">← Back</button>
       </div>
     </section>
     
@@ -154,6 +155,7 @@
         <textarea id="reviewText" placeholder="Write your review here (max 130 characters)" maxlength="130"></textarea>
         <div id="charCount">130 characters left</div>
         <button type="button" id="submitReviewForm">Create Review Share Image</button>
+        <button type="button" id="backFromReviewForm">← Back</button>
       </div>
     </section>
     
@@ -176,6 +178,7 @@
         <h2>Thank You!</h2>
         <p>Thank you for sharing your experience! Would you please drop the review you just wrote onto our Google profile? It really helps us get more visible.</p>
         <button type="button" id="googleReviewButton">Paste Review on Google</button>
+        <button type="button" id="backFromGoogleReview">← Back</button>
       </div>
     </section>
     
@@ -208,7 +211,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.7b</span>
+    <span class="footer-version">Version d-2.7.0</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

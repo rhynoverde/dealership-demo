@@ -190,7 +190,7 @@ function stopCamera() {
   }
 }
 
-// For "Take Photo": capture a frame using a 2160×1400 canvas to yield a final 1080×700 image.
+// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final 1080×700 image.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Back-to-Options (for Upload and URL sections)
+  // Back-to-Options Buttons (for Upload and URL sections)
   document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
       resetPhotoProcess();
@@ -406,19 +406,73 @@ document.addEventListener('DOMContentLoaded', () => {
     showQRPage();
   });
   
-  // Text Message Page – Clicking Link: Navigate to Customer Share Page (preserve the custom image)
+  // Text Message Page – Clicking Link: Copy final image to Vehicle Share Page and show it.
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
     const finalImgSrc = document.getElementById('finalImage')?.src || "";
-    const customerShareImage = document.getElementById('customerShareImage');
-    if (customerShareImage && finalImgSrc) {
-      customerShareImage.src = finalImgSrc;
+    const vehicleShareImage = document.getElementById('vehicleShareImage');
+    if (vehicleShareImage && finalImgSrc) {
+      vehicleShareImage.src = finalImgSrc;
     }
-    showStep('customerSharePage');
+    showStep('vehicleSharePage');
   });
   
-  // Customer Share Page – Forward Button: Navigate to Review Form Page
-  document.getElementById('forwardFromCustomerShare')?.addEventListener('click', () => {
+  // Vehicle Share Page – "Share My Review Link" Button Event (native share modal)
+  document.getElementById('shareNowButton')?.addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      Swal.fire({
+        title: `<strong>Contact Link Saved to Clipboard!</strong>`,
+        html: `
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste it as a sticker in your Instagram Story.</li>
+            <li>😃 Paste it as a comment on your Facebook post.</li>
+            <li>😁 Use it in your TikTok bio.</li>
+          </ul>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Got it!, Share Image Now',
+        cancelButtonText: 'More Instructions'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const vehicleImgElement = document.getElementById('vehicleShareImage');
+          const vehicleImgSrc = vehicleImgElement ? vehicleImgElement.src : "";
+          if (vehicleImgSrc && navigator.share) {
+            try {
+              const response = await fetch(vehicleImgSrc);
+              const blob = await response.blob();
+              const fileType = vehicleImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+              const file = new File([blob], `vehicle.${fileType.split('/')[1]}`, { type: fileType });
+              await navigator.share({
+                files: [file]
+                // Removed "title" to maximize share options
+              });
+            } catch (error) {
+              console.error('Error sharing image', error);
+            }
+          } else {
+            console.log('Vehicle share image not found or Web Share API not supported.');
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
+        }
+      });
+    } catch (err) {
+      alert("Failed to copy link");
+    }
+  });
+  
+  // Vehicle Share Page – Back Button: Navigate back to Text Message Page
+  document.getElementById('backFromVehicleShare')?.addEventListener('click', () => {
+    showStep('textMessagePage');
+  });
+  
+  // Vehicle Share Page – Forward Button: Navigate to Review Form Page and initialize star rating.
+  document.getElementById('forwardFromVehicleShare')?.addEventListener('click', () => {
     showStep('reviewFormPage');
     initStarRating();
   });
@@ -441,6 +495,11 @@ document.addEventListener('DOMContentLoaded', () => {
       reviewShareImageElem.src = reviewShareUrl;
     }
     showStep('reviewSharePage');
+  });
+  
+  // Add Back Button on Review Form Page
+  document.getElementById('backFromReviewForm')?.addEventListener('click', () => {
+    showStep('vehicleSharePage');
   });
   
   // Update Character Count for Review Text Input
@@ -467,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
           <p>Suggestions:</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
@@ -490,14 +549,14 @@ document.addEventListener('DOMContentLoaded', () => {
               const fileType = reviewImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
               const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
               await navigator.share({
-                files: [file],
-                title: 'My Review of Michael Jones - Demo Auto Sales'
+                files: [file]
+                // Removed "title" to maximize share options
               });
             } catch (error) {
               console.error('Error sharing image', error);
             }
           } else {
-            console.log('Review image not found or Web Share API not supported.');
+            console.log('Review share image not found or Web Share API not supported.');
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
@@ -508,12 +567,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // Review Share Page – Back Button: Navigate back to Review Form Page and reinitialize star rating.
+  document.getElementById('backFromReviewShare')?.addEventListener('click', () => {
+    showStep('reviewFormPage');
+    initStarRating();
+  });
+  
   // Review Share Page – Forward Button: Navigate to Google Review Page
   document.getElementById('forwardFromReviewShare')?.addEventListener('click', () => {
     showStep('googleReviewPage');
   });
   
-  // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event
+  // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event (Open in new tab)
   document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
     const reviewTextElem = document.getElementById('reviewText');
     if (!reviewTextElem) return;
@@ -533,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         icon: 'info',
         confirmButtonText: 'Post Review on Google'
       }).then(() => {
-        window.location.href = 'https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M';
+        window.open('https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M', '_blank');
       });
     } catch (err) {
       alert("Failed to copy review text");
