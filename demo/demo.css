@@ -149,6 +149,7 @@ button:active {
   left: 10px;
   z-index: 2;
 }
+/* Removed back button styling if not needed; back button will not be present in take photo section */
 .back-btn {
   background-color: #000;
   border: none;
@@ -158,12 +159,12 @@ button:active {
   border-radius: 4px;
   cursor: pointer;
 }
-/* Camera container sized at 400x260 (ratio ≈ 1.54) */
+/* Updated camera container: 400x260 with extra top margin for iPhone */
 #cameraContainer {
   position: relative;
   width: 400px;
   height: 260px;
-  margin: 0 auto 15px;
+  margin: 200px auto 15px;  /* 200px top margin added */
   background: #000;
   border-radius: 4px;
   overflow: hidden;
@@ -183,7 +184,7 @@ button:active {
   height: 100%;
   pointer-events: none;
 }
-/* Remove the yellow overlay box by hiding it */
+/* Hide the overlay "hole" completely */
 #cameraOverlay .hole {
   display: none;
 }
@@ -235,7 +236,7 @@ button:active {
   background-color: #ccc;
 }
 
-/* Cropping Section - container sized to 300x194 (for 1080x700 final) */
+/* Cropping Section - container sized at 300x194 (for 1080x700 final) */
 #cropContainer {
   width: 300px;
   height: 194px;

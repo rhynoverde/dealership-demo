@@ -49,14 +49,11 @@
         
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <div class="camera-header">
-            <button type="button" id="cameraBack" class="back-btn">← Back</button>
-          </div>
-          <!-- Camera container set to 400×260 for proper preview -->
+          <!-- Removed the back button for simplicity -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
-              <!-- Removed the inner yellow box by hiding it -->
+              <!-- The overlay "hole" is removed (hidden) so only the video is shown -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -138,7 +135,7 @@
         <div class="share-image-container">
           <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <!-- The share button here triggers link copy, shows a modal, then (if confirmed) triggers native sharing -->
+        <!-- The share button now triggers copying and then native share via the modal -->
         <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
         <button type="button" id="backFromCustomerShare">← Back</button>
       </div>

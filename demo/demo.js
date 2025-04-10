@@ -91,7 +91,7 @@ function showQRPage() {
   showStep("qrSharePage");
 }
 
-// === EVENT LISTENER FOR "COPY LINK" & NATIVE SHARE ===
+// === EVENT LISTENER FOR SHARE NOW BUTTON (Customer Share Page) ===
 document.getElementById('shareNowButton')?.addEventListener('click', async () => {
   const shareLink = "https://GetMy.Deal/MichaelJones";
   try {
@@ -99,8 +99,13 @@ document.getElementById('shareNowButton')?.addEventListener('click', async () =>
     Swal.fire({
       title: `<strong>Link Copied!</strong>`,
       html: `
-        <p>We copied the link <strong>GetMy.Deal/MichaelJones</strong> to your clipboard. This link lets your friends and family directly contact Michael about their car shopping needs.</p>
-        <p>We suggest you post it in your Instagram Story (using the link sticker), Facebook posts, or TikTok bio.</p>
+        <p>Help friends and family contact him directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you will need to do is paste it in your post/story when you share the image!</p>
+        <p>Suggestions:</p>
+        <ul style="text-align: left;">
+          <li>😊 Paste it as a sticker in your Instagram Story.</li>
+          <li>😃 Paste it as a comment on your Facebook post.</li>
+          <li>😁 Use it in your TikTok bio.</li>
+        </ul>
       `,
       icon: 'success',
       showCancelButton: true,
@@ -108,7 +113,7 @@ document.getElementById('shareNowButton')?.addEventListener('click', async () =>
       cancelButtonText: 'More Instructions'
     }).then(async (result) => {
       if (result.isConfirmed) {
-        // Get the hyperise image URL from the final image element and share it
+        // Get the hyperise image URL from the final image element and trigger native sharing (without a description)
         const finalImgSrc = document.getElementById('finalImage').src;
         if (finalImgSrc && navigator.share) {
           try {
@@ -118,8 +123,8 @@ document.getElementById('shareNowButton')?.addEventListener('click', async () =>
             const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
             await navigator.share({
               files: [file],
-              title: 'My Vehicle Purchase Review',
-              text: 'Check out my personalized vehicle purchase review!'
+              title: 'My Vehicle Purchase Review'
+              // Removed text for broader share options
             });
           } catch (error) {
             console.error('Error sharing image', error);
@@ -204,7 +209,7 @@ function stopCamera() {
 }
 
 // === IMAGE CAPTURE & PROCESSING ===
-// For "Take Photo", we capture a frame using a 2160×1400 canvas so that when scaled down we get a 1080×700 image.
+// For "Take Photo", we capture a frame using a canvas sized at 2160×1400 (2× final) so that the result is 1080×700.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -215,7 +220,7 @@ function captureFromCamera() {
   fullCanvas.height = CAPTURE_HEIGHT;
   const ctx = fullCanvas.getContext('2d');
   if (ctx) {
-    // Cover mode: scale video so it fills the canvas and center-crop.
+    // Cover mode: scale video to fill the canvas and center-crop.
     const scale = Math.max(CAPTURE_WIDTH / video.videoWidth, CAPTURE_HEIGHT / video.videoHeight);
     const newWidth = video.videoWidth * scale;
     const newHeight = video.videoHeight * scale;
@@ -223,7 +228,7 @@ function captureFromCamera() {
     const offsetY = (CAPTURE_HEIGHT - newHeight) / 2;
     ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, offsetX, offsetY, newWidth, newHeight);
   }
-  // Scale down fullCanvas to FINAL_WIDTH x FINAL_HEIGHT
+  // Scale down to FINAL_WIDTH x FINAL_HEIGHT
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = FINAL_WIDTH;
   cropCanvas.height = FINAL_HEIGHT;
@@ -303,10 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('photoOptions').style.display = 'block';
     });
   });
-  document.getElementById('cameraBack')?.addEventListener('click', () => {
-    resetPhotoProcess();
-    document.getElementById('photoOptions').style.display = 'block';
-  });
+  // (Camera Back button removed intentionally)
 
   // File Upload
   document.getElementById('uploadInput')?.addEventListener('change', e => {
@@ -450,10 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// === imgbb UPLOAD FUNCTION (duplicate at end removed) ===
+// === imgbb UPLOAD FUNCTION (duplicate removed) ===
 async function uploadToImgbb(dataUrl) {
   const imgbbApiKey = IMGBB_API_KEY;
-  const base64Image = dataUrl.split(',')[1]; // Remove the data header
+  const base64Image = dataUrl.split(',')[1]; // Remove data header
   const formData = new FormData();
   formData.append('image', base64Image);
   formData.append('key', imgbbApiKey);
