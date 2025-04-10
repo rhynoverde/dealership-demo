@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.5</title>
+  <title>Dealership Demo - Version d-2.6.6</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -49,11 +49,11 @@
         
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <!-- Removed the back button for simplicity -->
+          <!-- Removed back button for simplicity -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
-              <!-- The overlay "hole" is removed (hidden) so only the video is shown -->
+              <!-- Hide overlay "hole" -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -128,16 +128,57 @@
       </div>
     </section>
     
-    <!-- Customer Share Page -->
-    <section id="customerSharePage" class="step">
+    <!-- New: Review Form Page -->
+    <section id="reviewFormPage" class="step">
       <div class="form-section">
-        <h2>Share Your Vehicle Purchase!</h2>
-        <div class="share-image-container">
-          <img id="customerShareImage" src="" alt="Share Image" />
+        <h2>Write a quick review for Michael Jones - Demo Auto Sales</h2>
+        <div class="star-rating" id="reviewStarRating">
+          <span data-value="1">&#9733;</span>
+          <span data-value="2">&#9733;</span>
+          <span data-value="3">&#9733;</span>
+          <span data-value="4">&#9733;</span>
+          <span data-value="5">&#9733;</span>
         </div>
-        <!-- The share button now triggers copying and then native share via the modal -->
-        <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
-        <button type="button" id="backFromCustomerShare">← Back</button>
+        <textarea id="reviewText" placeholder="Write your review here (max 130 characters)" maxlength="130"></textarea>
+        <div id="charCount">130 characters left</div>
+        <button type="button" id="submitReviewForm">Create Review Share Image</button>
+      </div>
+    </section>
+    
+    <!-- New: Review Share Page -->
+    <section id="reviewSharePage" class="step">
+      <div class="form-section">
+        <h2>Share Your Review of Michael Jones - Demo Auto Sales</h2>
+        <div class="share-image-container">
+          <img id="reviewShareImage" src="" alt="Review Share Image" />
+        </div>
+        <button type="button" id="reviewShareButton" class="share-button">Share My Review Link</button>
+        <button type="button" id="backFromReviewShare">← Back</button>
+      </div>
+    </section>
+    
+    <!-- New: Google Review Page -->
+    <section id="googleReviewPage" class="step">
+      <div class="form-section">
+        <h2>Thank You!</h2>
+        <p>Thank you for sharing so much about your vehicle purchase and experience with me. One more thing, do you mind dropping the review you just wrote onto our Google profile? It really helps us get more visible and gain more customers from maps when people know we treat our customers right!</p>
+        <button type="button" id="googleReviewButton">Paste Review on Google</button>
+      </div>
+    </section>
+    
+    <!-- New: Final Options Page -->
+    <section id="finalOptionsPage" class="step">
+      <div class="form-section">
+        <h2>WHEW! So much work, but what you did REALLY helps us!</h2>
+        <p>If you would like to post or save your share images or review anywhere else, here they are:</p>
+        <div class="share-image-container">
+          <img id="finalShareImage" src="" alt="Final Share Image" />
+        </div>
+        <textarea id="finalReviewText" placeholder="Your review will appear here..."></textarea>
+        <button type="button" id="copyReviewText">Copy Review Text</button>
+        <p>Want to come back to this page later?</p>
+        <button type="button" id="textLinkFinal">Text me a link to this page</button>
+        <button type="button" id="emailLinkFinal">Email me a link to this page</button>
       </div>
     </section>
     
@@ -154,7 +195,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.5</span>
+    <span class="footer-version">Version d-2.6.6</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

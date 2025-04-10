@@ -149,7 +149,6 @@ button:active {
   left: 10px;
   z-index: 2;
 }
-/* Removed back button styling if not needed; back button will not be present in take photo section */
 .back-btn {
   background-color: #000;
   border: none;
@@ -159,12 +158,12 @@ button:active {
   border-radius: 4px;
   cursor: pointer;
 }
-/* Updated camera container: 400x260 with extra top margin for iPhone */
+/* Camera container: 400x260 with 200px top margin */
 #cameraContainer {
   position: relative;
   width: 400px;
   height: 260px;
-  margin: 200px auto 15px;  /* 200px top margin added */
+  margin: 200px auto 15px;
   background: #000;
   border-radius: 4px;
   overflow: hidden;
@@ -184,7 +183,7 @@ button:active {
   height: 100%;
   pointer-events: none;
 }
-/* Hide the overlay "hole" completely */
+/* Hide the overlay "hole" entirely */
 #cameraOverlay .hole {
   display: none;
 }
@@ -236,7 +235,7 @@ button:active {
   background-color: #ccc;
 }
 
-/* Cropping Section - container sized at 300x194 (for 1080x700 final) */
+/* Cropping Section: 300x194 for 1080x700 final */
 #cropContainer {
   width: 300px;
   height: 194px;
@@ -335,6 +334,80 @@ button:active {
 }
 .share-button:hover {
   background-color: #005bb5;
+}
+
+/* Review Form Page */
+#reviewFormPage {
+  text-align: center;
+}
+#reviewFormPage h2 {
+  font-size: 20px;
+  margin-bottom: 15px;
+}
+.star-rating {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+.star-rating span {
+  font-size: 30px;
+  cursor: pointer;
+  color: #ccc;
+  margin: 0 2px;
+  transition: color 0.3s;
+}
+.star-rating span.selected {
+  color: gold;
+}
+#reviewText {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+#charCount {
+  text-align: right;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+#charCount.red {
+  color: red;
+}
+
+/* Review Share Page */
+#reviewSharePage h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.share-image-container {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+/* Google Review Page */
+#googleReviewPage h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+#googleReviewPage p {
+  margin-bottom: 15px;
+}
+
+/* Final Options Page */
+#finalOptionsPage h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+#finalOptionsPage textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+  margin-bottom: 15px;
 }
 
 /* QR Share Page */
