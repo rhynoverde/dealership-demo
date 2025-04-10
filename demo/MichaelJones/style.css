@@ -9,7 +9,7 @@ body, html {
   
   /* Header Styles */
   .header {
-    background: #222;
+    background: #003366; /* Derived from logo dark blue */
     color: #fff;
     padding: 15px;
     display: flex;
@@ -18,7 +18,8 @@ body, html {
   }
   
   .logo {
-    height: 50px;
+    /* Increased logo size */
+    height: 80px;
   }
   
   .main-nav ul {
@@ -35,6 +36,11 @@ body, html {
   .main-nav a {
     color: #fff;
     text-decoration: none;
+    transition: color 0.3s;
+  }
+  
+  .main-nav a:hover {
+    color: #cc0000; /* Accent red */
   }
   
   /* Hero Section */
@@ -87,7 +93,7 @@ body, html {
     min-width: 250px;
     margin: 10px;
     padding: 20px;
-    background: #eaeaea;
+    background: #f0f0f0;
     border-radius: 8px;
   }
   
@@ -116,15 +122,16 @@ body, html {
   #contactForm button {
     margin-top: 15px;
     padding: 10px;
-    background: #222;
+    background: #003366;
     color: #fff;
     border: none;
     cursor: pointer;
     border-radius: 4px;
+    transition: background 0.3s;
   }
   
   #contactForm button:hover {
-    background: #444;
+    background: #cc0000;
   }
   
   /* Chat Widget Styles */
@@ -141,7 +148,7 @@ body, html {
   }
   
   .chat-header {
-    background: #222;
+    background: #003366;
     color: #fff;
     padding: 10px;
     cursor: pointer;
@@ -189,9 +196,14 @@ body, html {
   .chat-input button {
     padding: 10px;
     border: none;
-    background: #222;
+    background: #003366;
     color: #fff;
     cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .chat-input button:hover {
+    background: #cc0000;
   }
   
   /* Dealership Info */
@@ -206,19 +218,20 @@ body, html {
     display: inline-block;
     margin-top: 20px;
     padding: 10px 20px;
-    background: #222;
+    background: #003366;
     color: #fff;
     text-decoration: none;
     border-radius: 4px;
+    transition: background 0.3s;
   }
   
   .dealership-info a.btn:hover {
-    background: #444;
+    background: #cc0000;
   }
   
   /* Footer */
   footer {
-    background: #222;
+    background: #003366;
     color: #fff;
     text-align: center;
     padding: 10px;

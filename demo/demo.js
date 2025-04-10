@@ -18,6 +18,7 @@ let currentScale = 1;
 let maxZoom = 1;
 let userReview = ""; // To store review text from the Review Form page
 let selectedRating = 0; // For star rating
+let uploadedVehicleUrl = ""; // To store the imgbb URL
 
 // =======================
 // UTILITY FUNCTIONS
@@ -190,7 +191,7 @@ function stopCamera() {
   }
 }
 
-// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final image of 1080×700.
+// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final 1080×700 image.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -220,7 +221,7 @@ function captureFromCamera() {
   stopCamera();
   uploadToImgbb(croppedDataUrl)
     .then(publicUrl => {
-      // Set the final image on the Salesperson Final Page using the Hyperise URL with the imgbb URL appended
+      uploadedVehicleUrl = publicUrl;  // Save for Google modal use
       document.getElementById('finalImage').src =
         'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
       showStep('step3');
@@ -329,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
     track.applyConstraints({ advanced: [{ torch: on }] });
   });
   
-  // Crop → Upload & Show Final Page
+  // Crop → Upload & Show Final Page (Salesperson Final Page)
   document.getElementById('cropButton')?.addEventListener('click', () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
@@ -338,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cropper = null;
     uploadToImgbb(croppedDataUrl)
       .then(publicUrl => {
+        uploadedVehicleUrl = publicUrl;
         document.getElementById('finalImage').src =
           'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
         setupPrefilledMessage();
@@ -377,6 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       croppedDataUrl = canvas.toDataURL('image/jpeg');
       uploadToImgbb(croppedDataUrl)
         .then(publicUrl => {
+          uploadedVehicleUrl = publicUrl;
           document.getElementById('finalImage').src =
             'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
           setupPrefilledMessage();
@@ -418,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('vehicleSharePage');
   });
   
-  // Vehicle Share Page – Share Button Event (native share on the custom Hyperise image)
+  // Vehicle Share Page – Share Button Event (native share for vehicle image)
   document.getElementById('shareNowButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -457,7 +460,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             console.log('Vehicle share image not found or Web Share API not supported.');
           }
-          // (No automatic forward on this button; use the forward button below)
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           alert("For more instructions, please check our guidelines.");
         }
@@ -488,8 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     userReview = reviewValue;
-    // Build personalized Review Share image URL using Hyperise parameters:
-    // first_name from customerData.name and job_title from review text.
+    // Build personalized Review Share image URL using Hyperise parameters.
     const reviewShareUrl = `https://my.reviewshare.pics/i/pGdj8g8st.png?first_name=${encodeURIComponent(customerData.name)}&job_title=${encodeURIComponent(reviewValue)}`;
     const reviewShareImageElem = document.getElementById('reviewShareImage');
     if (reviewShareImageElem) {
@@ -503,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('vehicleSharePage');
   });
   
-  // REVIEW SHARE PAGE – Share Button Event (native share on Review Share image)
+  // REVIEW SHARE PAGE – Share Button Event (native share for review share image)
   document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -542,7 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             console.log('Review share image not found or Web Share API not supported.');
           }
-          // No automatic forward here; use forward button below.
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           alert("For more instructions, please check our guidelines.");
         }
@@ -570,6 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewTextValue = reviewTextElem.value.trim();
     try {
       await navigator.clipboard.writeText(reviewTextValue);
+      // In the modal, include the imgbb photo (using uploadedVehicleUrl) so the user can long press it to save.
       Swal.fire({
         title: `<strong>Review Copied!</strong>`,
         html: `
@@ -579,12 +580,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <li>Tap on your star rating.</li>
             <li>Long press in the review box and select "paste".</li>
           </ol>
+          <p><strong>Tip:</strong> Long press the image below to save it to your device and share it along with your review.</p>
+          <img src="${uploadedVehicleUrl ? uploadedVehicleUrl : ''}" alt="Vehicle Photo" style="max-width:100%; margin-top:10px;">
         `,
         icon: 'info',
         confirmButtonText: 'Post Review on Google'
       }).then(() => {
         window.open('https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M', '_blank');
-        // After opening, automatically advance to the Final Options Page after a short delay
+        // Forward to Final Options Page after a short delay
         setTimeout(() => {
           showStep('finalOptionsPage');
         }, 1000);
@@ -604,103 +607,51 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE: Copy Review Text, Text/Email Link Buttons (simulate with alerts)
-  document.getElementById('copyReviewText')?.addEventListener('click', () => {
-    const finalReviewText = document.getElementById('finalReviewText')?.value;
-    if (!finalReviewText) return;
-    navigator.clipboard.writeText(finalReviewText).then(() => {
-      alert("Review text copied to clipboard.");
-    }).catch(() => {
-      alert("Failed to copy review text.");
-    });
-  });
-  document.getElementById('textLinkFinal')?.addEventListener('click', () => {
-    alert("Text with link to this share page sent!");
-  });
-  document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
-    alert("Email with link to this share page sent!");
+  // FINAL OPTIONS PAGE – Share Vehicle Image Button (Native share)
+  document.getElementById('shareVehicleFinalButton')?.addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      Swal.fire({
+        title: `<strong>Contact Link Saved to Clipboard!</strong>`,
+        html: `
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste it as a sticker in your Instagram Story.</li>
+            <li>😃 Paste it as a comment on your Facebook post.</li>
+            <li>😁 Use it in your TikTok bio.</li>
+          </ul>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Got it!, Share Image Now',
+        cancelButtonText: 'More Instructions'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const vehicleImgElement = document.getElementById('finalVehicleShareImage');
+          const vehicleImgSrc = vehicleImgElement ? vehicleImgElement.src : "";
+          if (vehicleImgSrc && navigator.share) {
+            try {
+              const response = await fetch(vehicleImgSrc);
+              const blob = await response.blob();
+              const fileType = vehicleImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+              const file = new File([blob], `vehicle.${fileType.split('/')[1]}`, { type: fileType });
+              await navigator.share({ files: [file] });
+            } catch (error) {
+              console.error('Error sharing vehicle image', error);
+            }
+          } else {
+            console.log('Final vehicle share image not found or Web Share API not supported.');
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          alert("For more instructions, please check our guidelines.");
+        }
+      });
+    } catch (err) {
+      alert("Failed to copy link");
+    }
   });
   
-  // FINAL OPTIONS PAGE – Back Button: Navigate back to Google Review Page.
-  document.getElementById('backFromFinalOptions')?.addEventListener('click', () => {
-    showStep('googleReviewPage');
-  });
-});
-
-// =======================
-// END OF EVENT LISTENERS
-// =======================
-
-function getBlurredDataURL(img, blurAmount, width, height, callback) {
-  callback(img);
-}
-
-function initPinchZoom(video) {
-  activePointers.clear();
-  let initialDistance = 0;
-  let initialScale = currentScale;
-  const zoomIndicator = document.getElementById('zoomIndicator');
-  video.addEventListener('pointerdown', function(e) {
-    e.preventDefault();
-    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (activePointers.size === 2) {
-      const pts = Array.from(activePointers.values());
-      initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      initialScale = currentScale;
-    }
-  });
-  video.addEventListener('pointermove', function(e) {
-    e.preventDefault();
-    if (!activePointers.has(e.pointerId)) return;
-    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (activePointers.size === 2) {
-      const pts = Array.from(activePointers.values());
-      const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      currentScale = initialScale * (newDist / initialDistance);
-      video.style.transform = `scale(${currentScale})`;
-      if (zoomIndicator) {
-        zoomIndicator.style.display = 'block';
-        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? "Zooming In..." : "Zooming Out...";
-      }
-    }
-  });
-  video.addEventListener('pointerup', function(e) {
-    e.preventDefault();
-    activePointers.delete(e.pointerId);
-    if (activePointers.size < 2 && zoomIndicator) {
-      zoomIndicator.style.display = "none";
-    }
-  });
-  video.addEventListener('pointercancel', function(e) {
-    e.preventDefault();
-    activePointers.delete(e.pointerId);
-    if (activePointers.size < 2 && zoomIndicator) {
-      zoomIndicator.style.display = "none";
-    }
-  });
-}
-
-function startCamera() {
-  const video = document.getElementById('cameraPreview');
-  currentScale = 1;
-  if (video) video.style.transform = `scale(${currentScale})`;
-  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
-      .then(function(stream) {
-        cameraStream = stream;
-        if (video) {
-          video.srcObject = stream;
-          video.play();
-          initPinchZoom(video);
-        }
-      })
-      .catch(function(err) { alert('Camera access denied or not available.'); });
-  }
-}
-
-function stopCamera() {
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(function(track) { track.stop(); });
-    cameraStream = null;
-  }
-}
+  // FINAL OPTIONS PAGE – Share Review Image Button (Native share)
+  document.getElementById('shareReview
