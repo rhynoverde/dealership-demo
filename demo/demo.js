@@ -417,64 +417,15 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('vehicleSharePage');
   });
   
-  // Vehicle Share Page – "Share My Review Link" Button Event (native share modal)
-  document.getElementById('shareNowButton')?.addEventListener('click', async () => {
-    const shareLink = "https://GetMy.Deal/MichaelJones";
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      Swal.fire({
-        title: `<strong>Contact Link Saved to Clipboard!</strong>`,
-        html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link to make it easy peasy to contact him directly to your clipboard so all you need to do is paste it in your post/story when you share the image!</p>
-          <p>Suggestions:</p>
-          <ul style="text-align: left;">
-            <li>😊 Paste it as a sticker in your Instagram Story.</li>
-            <li>😃 Paste it as a comment on your Facebook post.</li>
-            <li>😁 Use it in your TikTok bio.</li>
-          </ul>
-        `,
-        icon: 'success',
-        showCancelButton: true,
-        confirmButtonText: 'Got it!, Share Image Now',
-        cancelButtonText: 'More Instructions'
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          const vehicleImgElement = document.getElementById('vehicleShareImage');
-          const vehicleImgSrc = vehicleImgElement ? vehicleImgElement.src : "";
-          if (vehicleImgSrc && navigator.share) {
-            try {
-              const response = await fetch(vehicleImgSrc);
-              const blob = await response.blob();
-              const fileType = vehicleImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
-              const file = new File([blob], `vehicle.${fileType.split('/')[1]}`, { type: fileType });
-              await navigator.share({
-                files: [file]
-                // Removed "title" to maximize share options
-              });
-            } catch (error) {
-              console.error('Error sharing image', error);
-            }
-          } else {
-            console.log('Vehicle share image not found or Web Share API not supported.');
-          }
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-          window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
-        }
-      });
-    } catch (err) {
-      alert("Failed to copy link");
-    }
-  });
-  
-  // Vehicle Share Page – Back Button: Navigate back to Text Message Page
-  document.getElementById('backFromVehicleShare')?.addEventListener('click', () => {
-    showStep('textMessagePage');
-  });
-  
   // Vehicle Share Page – Forward Button: Navigate to Review Form Page and initialize star rating.
   document.getElementById('forwardFromVehicleShare')?.addEventListener('click', () => {
     showStep('reviewFormPage');
     initStarRating();
+  });
+  
+  // Vehicle Share Page – Back Button
+  document.getElementById('backFromVehicleShare')?.addEventListener('click', () => {
+    showStep('textMessagePage');
   });
   
   // REVIEW FORM PAGE: Submit Review Form Event
@@ -550,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
               const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
               await navigator.share({
                 files: [file]
-                // Removed "title" to maximize share options
               });
             } catch (error) {
               console.error('Error sharing image', error);
@@ -558,6 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             console.log('Review share image not found or Web Share API not supported.');
           }
+          // Automatically forward to Google Review Page after sharing
+          showStep('googleReviewPage');
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
         }
@@ -578,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('googleReviewPage');
   });
   
-  // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event (Open in new tab)
+  // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event (Open in new tab, then forward)
   document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
     const reviewTextElem = document.getElementById('reviewText');
     if (!reviewTextElem) return;
@@ -599,10 +551,24 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmButtonText: 'Post Review on Google'
       }).then(() => {
         window.open('https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M', '_blank');
+        // Automatically forward to the Final Options Page after posting
+        setTimeout(() => {
+          showStep('finalOptionsPage');
+        }, 1000);
       });
     } catch (err) {
       alert("Failed to copy review text");
     }
+  });
+  
+  // GOOGLE REVIEW PAGE – Back Button: Navigate back to Review Share Page
+  document.getElementById('backFromGoogleReview')?.addEventListener('click', () => {
+    showStep('reviewSharePage');
+  });
+  
+  // GOOGLE REVIEW PAGE – Forward Button: Navigate to Final Options Page
+  document.getElementById('forwardFromGoogleReview')?.addEventListener('click', () => {
+    showStep('finalOptionsPage');
   });
   
   // FINAL OPTIONS PAGE: Copy Review Text, Text/Email Link Buttons
