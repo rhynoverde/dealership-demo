@@ -18,7 +18,7 @@ let currentScale = 1;
 let maxZoom = 1;
 let userReview = "";
 let selectedRating = 0;
-let uploadedVehicleUrl = ""; // Stores imgbb URL for vehicle image
+let uploadedVehicleUrl = ""; // Stores the imgbb URL for vehicle image
 
 // =======================
 // UTILITY FUNCTIONS
@@ -56,7 +56,26 @@ async function uploadToImgbb(dataUrl) {
 function showStep(id) {
   document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
   const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  if (el) {
+    el.classList.add('active');
+    // If finalOptionsPage, populate with final images and review text.
+    if (id === 'finalOptionsPage') {
+      const finalImage = document.getElementById('finalImage');
+      const vehicleShareImg = document.getElementById('finalVehicleShareImage');
+      if (finalImage && vehicleShareImg) {
+        vehicleShareImg.src = finalImage.src;
+      }
+      const reviewShareImg = document.getElementById('finalReviewShareImage');
+      const reviewShareImageElem = document.getElementById('reviewShareImage');
+      if (reviewShareImg && reviewShareImageElem) {
+        reviewShareImg.src = reviewShareImageElem.src;
+      }
+      const finalReviewTextElem = document.getElementById('finalReviewText');
+      if (finalReviewTextElem) {
+        finalReviewTextElem.value = userReview;
+      }
+    }
+  }
 }
 
 function hideAllPhotoSections() {
@@ -189,7 +208,7 @@ function stopCamera() {
   }
 }
 
-// Capture photo from camera using a 2160×1400 canvas, then crop to FINAL_WIDTH x FINAL_HEIGHT.
+// Capture photo using a 2160×1400 canvas, then crop to FINAL_WIDTH x FINAL_HEIGHT.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -255,7 +274,7 @@ function loadImageForCrop(src, isUrl = false) {
 // EVENT LISTENERS SETUP
 // =======================
 document.addEventListener('DOMContentLoaded', () => {
-  // Customer Info submission → Step 2
+  // Step 1 → Step 2: Customer Info Submission
   document.getElementById('toStep2')?.addEventListener('click', () => {
     const name = document.getElementById('customerName')?.value.trim();
     if (!name) return alert('Please enter the customer name.');
@@ -499,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('vehicleSharePage');
   });
   
-  // REVIEW SHARE PAGE – Share Button Event (native share for review share image)
+  // REVIEW SHARE PAGE – Share Button Event (native share for review image)
   document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -598,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE – When loading, populate final images and review text.
+  // FINAL OPTIONS PAGE – When entering this page, populate final images and review text.
   const finalImage = document.getElementById('finalImage');
   if (finalImage) {
     const vehicleShareImg = document.getElementById('finalVehicleShareImage');
