@@ -158,7 +158,7 @@ button:active {
   border-radius: 4px;
   cursor: pointer;
 }
-/* Updated camera container: 400px x 260px (aspect ratio ~1.54) */
+/* Camera container sized at 400x260 (ratio ≈ 1.54) */
 #cameraContainer {
   position: relative;
   width: 400px;
@@ -183,16 +183,9 @@ button:active {
   height: 100%;
   pointer-events: none;
 }
-/* Updated overlay "hole": 300px x 194px with only an outline */
+/* Remove the yellow overlay box by hiding it */
 #cameraOverlay .hole {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 300px;
-  height: 194px;
-  transform: translate(-50%, -50%);
-  border: 3px solid #FECE2C;
-  /* Removed box-shadow to eliminate dark shading */
+  display: none;
 }
 .zoom-indicator {
   position: absolute;
@@ -242,7 +235,7 @@ button:active {
   background-color: #ccc;
 }
 
-/* Cropping Section - container set to 300x194 (for 1080x700 final image) */
+/* Cropping Section - container sized to 300x194 (for 1080x700 final) */
 #cropContainer {
   width: 300px;
   height: 194px;

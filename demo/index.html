@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <!-- Disable default pinch zoom on the page -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Dealership Demo - Version d-2.6.4</title>
+  <title>Dealership Demo - Version d-2.6.5</title>
   <link rel="stylesheet" href="demo.css" />
   <!-- Include Cropper.js CSS -->
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
@@ -52,11 +52,11 @@
           <div class="camera-header">
             <button type="button" id="cameraBack" class="back-btn">← Back</button>
           </div>
-          <!-- Camera container dimensions adjusted to 400×260 -->
+          <!-- Camera container set to 400×260 for proper preview -->
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
             <div id="cameraOverlay">
-              <!-- Overlay "hole" now only has an outline (300×194) without dark shading -->
+              <!-- Removed the inner yellow box by hiding it -->
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
@@ -138,8 +138,7 @@
         <div class="share-image-container">
           <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <!-- This page shows the hyperise image with personalization -->
-        <!-- The share button here copies the link and shows instructions -->
+        <!-- The share button here triggers link copy, shows a modal, then (if confirmed) triggers native sharing -->
         <button type="button" id="shareNowButton" class="share-button">Share My Review Link</button>
         <button type="button" id="backFromCustomerShare">← Back</button>
       </div>
@@ -158,7 +157,7 @@
   </div>
   
   <footer id="pageFooter">
-    <span class="footer-version">Version d-2.6.4</span>
+    <span class="footer-version">Version d-2.6.5</span>
   </footer>
   
   <!-- Include Cropper.js and our demo.js script -->

@@ -91,7 +91,7 @@ function showQRPage() {
   showStep("qrSharePage");
 }
 
-// === EVENT LISTENER FOR "COPY LINK" (on Customer Share Page) ===
+// === EVENT LISTENER FOR "COPY LINK" & NATIVE SHARE ===
 document.getElementById('shareNowButton')?.addEventListener('click', async () => {
   const shareLink = "https://GetMy.Deal/MichaelJones";
   try {
@@ -99,17 +99,37 @@ document.getElementById('shareNowButton')?.addEventListener('click', async () =>
     Swal.fire({
       title: `<strong>Link Copied!</strong>`,
       html: `
-        <p>We copied the link to your clipboard.</p>
-        <p>Suggestions:</p>
-        <ul style="text-align: left;">
-          <li>😊 Paste it as a sticker in your Instagram Story.</li>
-          <li>😁 Share it in your Facebook post.</li>
-          <li>😃 Use it in your TikTok bio.</li>
-        </ul>
-        <p>You can now share the personalized review image!</p>
+        <p>We copied the link <strong>GetMy.Deal/MichaelJones</strong> to your clipboard. This link lets your friends and family directly contact Michael about their car shopping needs.</p>
+        <p>We suggest you post it in your Instagram Story (using the link sticker), Facebook posts, or TikTok bio.</p>
       `,
       icon: 'success',
-      confirmButtonText: 'OK'
+      showCancelButton: true,
+      confirmButtonText: 'Got it!, Share Image Now',
+      cancelButtonText: 'More Instructions'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        // Get the hyperise image URL from the final image element and share it
+        const finalImgSrc = document.getElementById('finalImage').src;
+        if (finalImgSrc && navigator.share) {
+          try {
+            const response = await fetch(finalImgSrc);
+            const blob = await response.blob();
+            const fileType = finalImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+            const file = new File([blob], `review.${fileType.split('/')[1]}`, { type: fileType });
+            await navigator.share({
+              files: [file],
+              title: 'My Vehicle Purchase Review',
+              text: 'Check out my personalized vehicle purchase review!'
+            });
+          } catch (error) {
+            console.error('Error sharing image', error);
+          }
+        } else {
+          console.log('Final image not found or Web Share API not supported.');
+        }
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
+      }
     });
   } catch (err) {
     alert("Failed to copy link");
@@ -184,18 +204,18 @@ function stopCamera() {
 }
 
 // === IMAGE CAPTURE & PROCESSING ===
-// For "Take Photo", we simply capture the frame with a canvas sized 2160×1400 (2× final size) for the correct 1080×700 ratio.
+// For "Take Photo", we capture a frame using a 2160×1400 canvas so that when scaled down we get a 1080×700 image.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
-  const CAPTURE_WIDTH = 2160; // 2 x 1080
-  const CAPTURE_HEIGHT = 1400; // 2 x 700
+  const CAPTURE_WIDTH = 2160; // 2 × 1080
+  const CAPTURE_HEIGHT = 1400; // 2 × 700
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = CAPTURE_WIDTH;
   fullCanvas.height = CAPTURE_HEIGHT;
   const ctx = fullCanvas.getContext('2d');
   if (ctx) {
-    // Cover mode: scale video to fill the canvas and center-crop
+    // Cover mode: scale video so it fills the canvas and center-crop.
     const scale = Math.max(CAPTURE_WIDTH / video.videoWidth, CAPTURE_HEIGHT / video.videoHeight);
     const newWidth = video.videoWidth * scale;
     const newHeight = video.videoHeight * scale;
@@ -203,7 +223,7 @@ function captureFromCamera() {
     const offsetY = (CAPTURE_HEIGHT - newHeight) / 2;
     ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, offsetX, offsetY, newWidth, newHeight);
   }
-  // Scale down to FINAL_WIDTH x FINAL_HEIGHT
+  // Scale down fullCanvas to FINAL_WIDTH x FINAL_HEIGHT
   const cropCanvas = document.createElement('canvas');
   cropCanvas.width = FINAL_WIDTH;
   cropCanvas.height = FINAL_HEIGHT;
@@ -288,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('photoOptions').style.display = 'block';
   });
 
-  // File upload
+  // File Upload
   document.getElementById('uploadInput')?.addEventListener('change', e => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -304,13 +324,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loadImageForCrop(url, true);
   });
 
-  // Capture photo
+  // Capture Photo
   document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
 
   // Swap / flash
   document.getElementById('swapCamera')?.addEventListener('click', () => {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
-    stopCamera(); 
+    stopCamera();
     startCamera();
   });
   document.getElementById('flashToggle')?.addEventListener('click', e => {
@@ -327,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cropper) return;
     const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
     croppedDataUrl = canvas.toDataURL('image/jpeg');
-    cropper.destroy(); 
+    cropper.destroy();
     cropper = null;
     uploadToImgbb(croppedDataUrl)
       .then(publicUrl => {
@@ -345,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = FINAL_WIDTH; 
+      canvas.width = FINAL_WIDTH;
       canvas.height = FINAL_HEIGHT;
       const ctx = canvas.getContext('2d');
       const scaleCover = Math.max(FINAL_WIDTH / img.width, FINAL_HEIGHT / img.height);
@@ -412,37 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => alert(err));
   });
 
-  // Customer Share Page – "Share Now" button (copies link and shows instructions)
-  // Updated to copy the getmy.deal link and show a SweetAlert2 modal instead of triggering native share.
-  document.getElementById('shareNowButton')?.addEventListener('click', async () => {
-    const shareLink = "https://GetMy.Deal/MichaelJones";
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      Swal.fire({
-        title: `<strong>Link Copied!</strong>`,
-        html: `
-          <p>We copied the link to your clipboard.</p>
-          <p>Suggestions:</p>
-          <ul style="text-align: left;">
-            <li>😊 Paste it as a sticker in your Instagram Story.</li>
-            <li>😁 Share it in your Facebook post.</li>
-            <li>😃 Use it in your TikTok bio.</li>
-          </ul>
-          <p>You can now share the personalized review image!</p>
-        `,
-        icon: 'success',
-        confirmButtonText: 'OK'
-      });
-    } catch (err) {
-      alert("Failed to copy link");
-    }
-  });
-
   // Back from Customer Share Page
   document.getElementById('backFromCustomerShare')?.addEventListener('click', () => {
     showStep('textMessagePage');
   });
-
+  
   // Back from QR Page
   document.getElementById('backFromQR')?.addEventListener('click', () => {
     showStep('step3');
@@ -456,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// === imgbb UPLOAD FUNCTION ===
+// === imgbb UPLOAD FUNCTION (duplicate at end removed) ===
 async function uploadToImgbb(dataUrl) {
   const imgbbApiKey = IMGBB_API_KEY;
   const base64Image = dataUrl.split(',')[1]; // Remove the data header
