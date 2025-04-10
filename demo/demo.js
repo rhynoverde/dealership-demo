@@ -190,7 +190,7 @@ function stopCamera() {
   }
 }
 
-// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final 1080×700 image.
+// For "Take Photo": capture a frame using a 2160×1400 canvas yielding a final image of 1080×700.
 function captureFromCamera() {
   const video = document.getElementById('cameraPreview');
   if (!video) return;
@@ -220,6 +220,7 @@ function captureFromCamera() {
   stopCamera();
   uploadToImgbb(croppedDataUrl)
     .then(publicUrl => {
+      // Set the final image on the Salesperson Final Page using the Hyperise URL with the imgbb URL appended
       document.getElementById('finalImage').src =
         'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
       showStep('step3');
@@ -264,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     customerData.phone = document.getElementById('customerPhone')?.value.trim() || '';
     showStep('step2');
   });
-
+  
   // Photo Option Buttons
   document.querySelectorAll('.photo-option').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -281,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
+  
   // Back-to-Options Buttons (for Upload and URL sections)
   document.querySelectorAll('.backToOptions').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -293,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetPhotoProcess();
     document.getElementById('photoOptions').style.display = 'block';
   });
-
+  
   // File Upload Event
   document.getElementById('uploadInput')?.addEventListener('change', e => {
     const file = e.target.files?.[0];
@@ -302,17 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = ev => loadImageForCrop(ev.target.result);
     reader.readAsDataURL(file);
   });
-
+  
   // Paste URL Event
   document.getElementById('loadUrlImage')?.addEventListener('click', () => {
     const url = document.getElementById('imageUrlInput')?.value.trim();
     if (!url) return alert('Please enter a valid URL.');
     loadImageForCrop(url, true);
   });
-
+  
   // Capture Photo Event
   document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
-
+  
   // Swap Camera / Flash Events
   document.getElementById('swapCamera')?.addEventListener('click', () => {
     currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
@@ -327,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const on = btn.classList.toggle('flash-on');
     track.applyConstraints({ advanced: [{ torch: on }] });
   });
-
+  
   // Crop → Upload & Show Final Page
   document.getElementById('cropButton')?.addEventListener('click', () => {
     if (!cropper) return;
@@ -344,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(err => alert(err));
   });
-
+  
   // Fit Entire Image Event
   document.getElementById('fitEntireButton')?.addEventListener('click', () => {
     const img = new Image();
@@ -385,14 +386,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     img.src = originalCapturedDataUrl || croppedDataUrl;
   });
-
+  
   // Change Photo Event
   document.getElementById('changePhoto')?.addEventListener('click', () => {
     resetPhotoProcess();
     document.getElementById('photoOptions').style.display = 'block';
     showStep('step2');
   });
-
+  
   // Salesperson Final Page – Text Link: Show Simulated Text Message Page
   document.getElementById('textLink')?.addEventListener('click', () => {
     showStep('textMessagePage');
@@ -417,13 +418,62 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('vehicleSharePage');
   });
   
+  // Vehicle Share Page – Share Button Event (native share on the custom Hyperise image)
+  document.getElementById('shareNowButton')?.addEventListener('click', async () => {
+    const shareLink = "https://GetMy.Deal/MichaelJones";
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      Swal.fire({
+        title: `<strong>Contact Link Saved to Clipboard!</strong>`,
+        html: `
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. We copied a link so all you need to do is paste it in your post/story when you share the image!</p>
+          <p>Suggestions:</p>
+          <ul style="text-align: left;">
+            <li>😊 Paste it as a sticker in your Instagram Story.</li>
+            <li>😃 Paste it as a comment on your Facebook post.</li>
+            <li>😁 Use it in your TikTok bio.</li>
+          </ul>
+        `,
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Got it!, Share Image Now',
+        cancelButtonText: 'More Instructions'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          const vehicleImgElement = document.getElementById('vehicleShareImage');
+          const vehicleImgSrc = vehicleImgElement ? vehicleImgElement.src : "";
+          if (vehicleImgSrc && navigator.share) {
+            try {
+              const response = await fetch(vehicleImgSrc);
+              const blob = await response.blob();
+              const fileType = vehicleImgSrc.endsWith('.png') ? 'image/png' : 'image/jpeg';
+              const file = new File([blob], `vehicle.${fileType.split('/')[1]}`, { type: fileType });
+              await navigator.share({
+                files: [file]
+              });
+            } catch (error) {
+              console.error('Error sharing vehicle image', error);
+            }
+          } else {
+            console.log('Vehicle share image not found or Web Share API not supported.');
+          }
+          // (No automatic forward on this button; use the forward button below)
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          alert("For more instructions, please check our guidelines.");
+        }
+      });
+    } catch (err) {
+      alert("Failed to copy link");
+    }
+  });
+  
   // Vehicle Share Page – Forward Button: Navigate to Review Form Page and initialize star rating.
   document.getElementById('forwardFromVehicleShare')?.addEventListener('click', () => {
     showStep('reviewFormPage');
     initStarRating();
   });
   
-  // Vehicle Share Page – Back Button
+  // Vehicle Share Page – Back Button: Navigate back to Text Message Page.
   document.getElementById('backFromVehicleShare')?.addEventListener('click', () => {
     showStep('textMessagePage');
   });
@@ -448,28 +498,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('reviewSharePage');
   });
   
-  // Add Back Button on Review Form Page
+  // Review Form Page – Back Button: Navigate back to Vehicle Share Page.
   document.getElementById('backFromReviewForm')?.addEventListener('click', () => {
     showStep('vehicleSharePage');
   });
   
-  // Update Character Count for Review Text Input
-  document.getElementById('reviewText')?.addEventListener('input', (e) => {
-    const maxChars = 130;
-    const currentLength = e.target.value.length;
-    const remaining = maxChars - currentLength;
-    const charCountElem = document.getElementById('charCount');
-    if (charCountElem) {
-      charCountElem.textContent = `${remaining} characters left`;
-      if (remaining <= 0) {
-        charCountElem.classList.add('red');
-      } else {
-        charCountElem.classList.remove('red');
-      }
-    }
-  });
-  
-  // REVIEW SHARE PAGE: Share Review Link Button Event
+  // REVIEW SHARE PAGE – Share Button Event (native share on Review Share image)
   document.getElementById('reviewShareButton')?.addEventListener('click', async () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
@@ -503,15 +537,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 files: [file]
               });
             } catch (error) {
-              console.error('Error sharing image', error);
+              console.error('Error sharing review image', error);
             }
           } else {
             console.log('Review share image not found or Web Share API not supported.');
           }
-          // Automatically forward to Google Review Page after sharing
-          showStep('googleReviewPage');
+          // No automatic forward here; use forward button below.
         } else if (result.dismiss === Swal.DismissReason.cancel) {
-          window.location.href = 'https://shareinstructions.embrfyr.com/dealershipdemo';
+          alert("For more instructions, please check our guidelines.");
         }
       });
     } catch (err) {
@@ -519,18 +552,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Review Share Page – Back Button: Navigate back to Review Form Page and reinitialize star rating.
+  // Review Share Page – Back Button: Navigate back to Review Form Page.
   document.getElementById('backFromReviewShare')?.addEventListener('click', () => {
     showStep('reviewFormPage');
     initStarRating();
   });
   
-  // Review Share Page – Forward Button: Navigate to Google Review Page
+  // Review Share Page – Forward Button: Navigate to Google Review Page.
   document.getElementById('forwardFromReviewShare')?.addEventListener('click', () => {
     showStep('googleReviewPage');
   });
   
-  // GOOGLE REVIEW PAGE: "Paste Review on Google" Button Event (Open in new tab, then forward)
+  // GOOGLE REVIEW PAGE – "Paste Review on Google" Button Event (open in new tab, then forward)
   document.getElementById('googleReviewButton')?.addEventListener('click', async () => {
     const reviewTextElem = document.getElementById('reviewText');
     if (!reviewTextElem) return;
@@ -551,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmButtonText: 'Post Review on Google'
       }).then(() => {
         window.open('https://search.google.com/local/writereview?placeid=ChIJAQB0dE1YkWsRXSuDBDHLr3M', '_blank');
-        // Automatically forward to the Final Options Page after posting
+        // After opening, automatically advance to the Final Options Page after a short delay
         setTimeout(() => {
           showStep('finalOptionsPage');
         }, 1000);
@@ -561,17 +594,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // GOOGLE REVIEW PAGE – Back Button: Navigate back to Review Share Page
+  // GOOGLE REVIEW PAGE – Back Button: Navigate back to Review Share Page.
   document.getElementById('backFromGoogleReview')?.addEventListener('click', () => {
     showStep('reviewSharePage');
   });
   
-  // GOOGLE REVIEW PAGE – Forward Button: Navigate to Final Options Page
+  // GOOGLE REVIEW PAGE – Forward Button: Navigate to Final Options Page.
   document.getElementById('forwardFromGoogleReview')?.addEventListener('click', () => {
     showStep('finalOptionsPage');
   });
   
-  // FINAL OPTIONS PAGE: Copy Review Text, Text/Email Link Buttons
+  // FINAL OPTIONS PAGE: Copy Review Text, Text/Email Link Buttons (simulate with alerts)
   document.getElementById('copyReviewText')?.addEventListener('click', () => {
     const finalReviewText = document.getElementById('finalReviewText')?.value;
     if (!finalReviewText) return;
@@ -582,17 +615,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
   document.getElementById('textLinkFinal')?.addEventListener('click', () => {
-    const currentUrl = window.location.href;
-    navigator.clipboard.writeText(currentUrl).then(() => {
-      alert("Page link copied to clipboard. We'll text you the link shortly.");
-    }).catch(() => {
-      alert("Failed to copy page link.");
-    });
+    alert("Text with link to this share page sent!");
   });
   document.getElementById('emailLinkFinal')?.addEventListener('click', () => {
-    const subject = encodeURIComponent("Review & Share Page Link");
-    const body = encodeURIComponent(`Here is the link to the review share page: ${window.location.href}`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    alert("Email with link to this share page sent!");
+  });
+  
+  // FINAL OPTIONS PAGE – Back Button: Navigate back to Google Review Page.
+  document.getElementById('backFromFinalOptions')?.addEventListener('click', () => {
+    showStep('googleReviewPage');
   });
 });
 

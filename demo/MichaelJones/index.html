@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Michael Jones - Demo Auto Sales</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header with Logo and Navigation -->
+  <header class="header">
+    <img src="https://dealershipdemo.embrfyr.com/images/DemoAutoSalesLogo.png" alt="Demo Auto Sales Logo" class="logo">
+    <nav class="main-nav">
+      <ul>
+        <li><a href="https://dealershipdemo.embrfyr.com/home">Home</a></li>
+        <li><a href="https://dealershipdemo.embrfyr.com/carlistings">Car Listings</a></li>
+        <li><a href="https://dealershipdemo.embrfyr.com/services">Services</a></li>
+        <li><a href="https://dealershipdemo.embrfyr.com/about">About Us</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section with Michael's Info -->
+  <section class="hero">
+    <div class="hero-image">
+      <img src="https://dealershipdemo.embrfyr.com/images/MichaelJonesFull.png" alt="Michael Jones">
+    </div>
+    <div class="hero-text">
+      <h1>Michael Jones</h1>
+      <p>Your friendly auto sales expert at Demo Auto Sales in Santa Clara, CA</p>
+    </div>
+  </section>
+
+  <!-- Contact Methods -->
+  <section class="contact-info">
+    <h2>Contact Michael</h2>
+    <div class="contact-methods">
+      <div class="contact-item">
+        <h3>Phone</h3>
+        <p><a href="tel:+14085551234">+1 (408) 555-1234</a></p>
+      </div>
+      <div class="contact-item">
+        <h3>Email</h3>
+        <p><a href="mailto:michael.jones@demoautosales.com">michael.jones@demoautosales.com</a></p>
+      </div>
+      <div class="contact-item">
+        <h3>Contact Form</h3>
+        <form id="contactForm">
+          <label for="name">Name:</label>
+          <input type="text" id="name" name="name" required>
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required>
+          <label for="message">Message:</label>
+          <textarea id="message" name="message" rows="4" required></textarea>
+          <button type="submit">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Chat Widget -->
+  <div id="chatWidget" class="chat-widget">
+    <div class="chat-header" id="chatHeader">
+      Chat with Michael
+      <span id="chatToggle" class="chat-toggle">_</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div id="chatMessages" class="chat-messages">
+        <p class="chat-message bot">Hi there! How can I help you today?</p>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Type your message...">
+        <button id="chatSend">Send</button>
+      </div>
+    </div>
+  </div>
+  <!-- End Chat Widget -->
+
+  <!-- Dealership Information -->
+  <section class="dealership-info">
+    <h2>Visit Our Dealership</h2>
+    <p>
+      Demo Auto Sales<br>
+      1234 Auto Lane,<br>
+      Santa Clara, CA 95050
+    </p>
+    <a href="https://dealershipdemo.embrfyr.com/carlistings" class="btn">Browse Our Car Listings</a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Demo Auto Sales. All rights reserved.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
