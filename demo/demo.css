@@ -40,7 +40,7 @@ body {
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   margin-top: 10px;
-  margin-bottom: 60px; /* leave space for footer */
+  margin-bottom: 60px;
 }
 
 /* Form Sections */
@@ -52,8 +52,6 @@ h2 {
   margin-bottom: 15px;
   text-align: center;
 }
-
-/* Form Fields */
 form label,
 .input-label {
   display: block;
@@ -88,7 +86,7 @@ form textarea,
   cursor: pointer;
 }
 
-/* Buttons */
+/* Default buttons (green) */
 button {
   background-color: #4CAF50;
   color: #fff;
@@ -115,7 +113,7 @@ button:active {
   display: block;
 }
 
-/* Photo Options (vertical stack) */
+/* Photo Options */
 .photo-options {
   display: block;
 }
@@ -141,12 +139,10 @@ button:active {
   background-color: #005bb5;
 }
 
-/* Camera Section Styling */
+/* Camera Section */
 .photo-section {
   margin-top: 15px;
 }
-
-/* Camera Header (Back button in upper left) */
 .camera-header {
   position: absolute;
   top: 10px;
@@ -162,8 +158,6 @@ button:active {
   border-radius: 4px;
   cursor: pointer;
 }
-
-/* Camera Container */
 #cameraContainer {
   position: relative;
   width: 400px;
@@ -180,8 +174,6 @@ button:active {
   transform-origin: center center;
   touch-action: none;
 }
-
-/* Camera Overlay */
 #cameraOverlay {
   position: absolute;
   top: 0;
@@ -200,8 +192,6 @@ button:active {
   border: 3px solid #FECE2C;
   box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
 }
-
-/* Zoom Indicator */
 .zoom-indicator {
   position: absolute;
   bottom: 10px;
@@ -234,7 +224,6 @@ button:active {
 .icon-btn:hover {
   background-color: rgba(128,128,128,0.9);
 }
-.flash-off { }
 .flash-on {
   background-color: #b8860b;
 }
@@ -251,10 +240,10 @@ button:active {
   background-color: #ccc;
 }
 
-/* Crop Container */
+/* Cropping Section - adjust the container's height to reflect 1080x700 ratio (300px wide x ~194px high) */
 #cropContainer {
   width: 300px;
-  height: 300px;
+  height: 194px;
   margin: 0 auto 15px;
   border: 2px solid #ddd;
   border-radius: 4px;
@@ -267,7 +256,7 @@ button:active {
   object-fit: contain;
 }
 
-/* Final Image Section */
+/* Salesperson Final Page */
 .final-image-section {
   text-align: center;
   margin-bottom: 15px;
@@ -285,64 +274,16 @@ button:active {
   height: 100%;
   object-fit: cover;
 }
-
-/* Shortlink & Message */
-.shortlink-label,
-.message-label {
-  font-weight: bold;
-  margin-bottom: 8px;
-  text-align: center;
-}
-.shortlink {
-  background-color: #f9f9f9;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  text-align: center;
-  font-size: 16px;
-}
-textarea {
-  resize: none;
-  width: 100%;
-}
-
-/* Share Buttons */
-.share-buttons {
+.final-buttons {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 15px;
 }
-.share-buttons button {
-  flex: 1 1 48%;
-  font-size: 14px;
-  padding: 12px;
+.final-buttons button {
+  flex: 1 1 45%;
 }
 
-/* QR Code Container */
-.qr-container {
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-/* Start Over Button */
-.start-over {
-  background-color: #555;
-}
-.start-over:hover {
-  background-color: #444;
-}
-
-/* Steps Visibility */
-.step {
-  display: none;
-}
-.step.active {
-  display: block;
-}
-
-/* Extra Styles for Simulated Text Message Screen */
+/* Text Message Screen */
 .text-message-screen {
   background-color: #e0f7fa;
   border-radius: 8px;
@@ -371,36 +312,39 @@ textarea {
   font-weight: bold;
 }
 
-/* Share Page Specific Styles */
+/* Customer Share Page */
+#customerSharePage h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
 .share-image-container {
   text-align: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 .share-image-container img {
-  width: 100%;
-  max-width: 400px;
+  max-width: 100%;
   border: 2px solid #ddd;
   border-radius: 4px;
 }
-.content {
-  text-align: center;
-}
-
-/* Main Button (for share) */
-.main-button {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  background-color: #d9534f;
+.share-button {
+  background-color: #007BFF;
   color: white;
   border: none;
+  padding: 15px;
+  font-size: 16px;
   border-radius: 30px;
   cursor: pointer;
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 10px;
+  transition: background-color 0.3s ease;
+  margin-bottom: 20px;
 }
-.main-button:hover {
-  background-color: #c9302c;
+.share-button:hover {
+  background-color: #005bb5;
+}
+
+/* Steps */
+.step {
+  display: none;
+}
+.step.active {
+  display: block;
 }

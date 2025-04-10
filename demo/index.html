@@ -10,10 +10,12 @@
   <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css" rel="stylesheet">
   <!-- Include SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Include AWS SDK for S3 (Backblaze S3 compatibility) -->
+  <script src="https://sdk.amazonaws.com/js/aws-sdk-2.953.0.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <!-- Step 1: Customer Info -->
+    <!-- Step 1: Customer Info (Salesperson enters customer info) -->
     <section id="step1" class="step active">
       <div class="form-section">
         <h2>Customer Information</h2>
@@ -28,11 +30,10 @@
         </form>
       </div>
     </section>
-
-    <!-- Step 2: Photo Selection & Capture -->
+    
+    <!-- Step 2: Photo Selection & Capture (Salesperson takes/uploads a photo) -->
     <section id="step2" class="step">
       <div class="form-section">
-        <!-- Vertical Photo Options -->
         <div id="photoOptions" class="photo-options">
           <button type="button" class="photo-option" data-option="take">
             <span class="icon">📷</span>
@@ -47,29 +48,26 @@
             <span class="label">Paste Image URL</span>
           </button>
         </div>
-
+        
         <!-- Take Photo Section -->
         <div id="takePhotoSection" class="photo-section" style="display:none;">
-          <!-- Camera header with back button in upper left -->
           <div class="camera-header">
             <button type="button" id="cameraBack" class="back-btn">← Back</button>
           </div>
           <div id="cameraContainer">
             <video id="cameraPreview" autoplay playsinline></video>
-            <!-- Overlay: centered 300x300 square -->
             <div id="cameraOverlay">
               <div class="hole"></div>
             </div>
             <div id="zoomIndicator" class="zoom-indicator" style="display:none;">Zooming...</div>
           </div>
-          <!-- Camera Controls -->
           <div class="camera-controls">
             <button type="button" id="swapCamera" class="icon-btn">↺</button>
             <button type="button" id="capturePhoto" class="shutter-btn"></button>
             <button type="button" id="flashToggle" class="icon-btn flash-off">⚡</button>
           </div>
         </div>
-
+        
         <!-- Upload Photo Section -->
         <div id="uploadPhotoSection" class="photo-section" style="display:none;">
           <p>Please choose a photo to upload:</p>
@@ -77,7 +75,7 @@
           <label for="uploadInput" class="upload-label">Select Photo</label>
           <button type="button" class="backToOptions">← Back</button>
         </div>
-
+        
         <!-- Paste URL Section -->
         <div id="urlPhotoSection" class="photo-section" style="display:none;">
           <p>Please enter the image URL:</p>
@@ -86,10 +84,10 @@
           <button type="button" id="loadUrlImage">Load Image</button>
           <button type="button" class="backToOptions">← Back</button>
         </div>
-
+        
         <!-- Cropping Section -->
         <div id="cropSection" class="photo-section" style="display:none;">
-          <p>Adjust the photo inside the square. Pinch to zoom and pan to frame your vehicle.</p>
+          <p>Adjust the photo inside the rectangle. Pinch to zoom and pan to frame your vehicle.</p>
           <div id="cropContainer">
             <img id="cropImage" src="" alt="To be cropped" />
           </div>
@@ -101,43 +99,25 @@
         </div>
       </div>
     </section>
-
-    <!-- Step 3: Final Image & Sharing -->
+    
+    <!-- Step 3: Salesperson Final Page (displays merged Hyperise image) -->
     <section id="step3" class="step">
       <div class="form-section">
-        <h2>Share the Link</h2>
-        <p class="shortlink-label">Your shortlink:</p>
-        <div id="shortLink" class="shortlink">justshar.ing/xyz</div>
-        <button type="button" id="copyLink" class="copy-link-btn">Copy Link</button>
-        <!-- Final Image Display -->
+        <h2>Final Image Ready for Sharing</h2>
         <div class="final-image-section">
-          <p>Your chosen image:</p>
           <div id="finalImageContainer">
             <img id="finalImage" src="" alt="Final Image" />
           </div>
-          <div class="final-buttons">
-            <button type="button" id="adjustCropping" class="adjust-cropping-btn">Adjust Cropping</button>
-            <button type="button" id="changeFinalImage" class="change-final-btn">Change Photo</button>
-          </div>
         </div>
-        <p class="message-label">Prefilled Message:</p>
-        <textarea id="prefilledMessage" rows="6"></textarea>
-        <div class="share-buttons">
+        <div class="final-buttons">
           <button type="button" id="textLink">Text Link</button>
-          <button type="button" id="emailLink">Email Link</button>
-          <button type="button" id="bothLink">Text & Email</button>
-          <button type="button" id="showQR">Show QR Code</button>
-          <button type="button" id="copyMessage">Copy Message</button>
+          <button type="button" id="copyLink">Copy Link</button>
+          <button type="button" id="startOver" class="start-over">Start Over</button>
         </div>
-        <div id="qrCode" class="qr-container" style="display:none;">
-          <p>Scan the QR Code:</p>
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=justshar.ing/xyz" alt="QR Code" />
-        </div>
-        <button type="button" id="startOver" class="start-over">Start Over</button>
       </div>
     </section>
-
-    <!-- New Section: Simulated Text Message (actual look like a messaging screen) -->
+    
+    <!-- Simulated Text Message Page (salesperson simulation) -->
     <section id="textMessagePage" class="step">
       <div class="form-section text-message-screen">
         <div class="message-bubble received">
@@ -149,25 +129,26 @@
         <button type="button" id="backToStep3">← Back</button>
       </div>
     </section>
-
-    <!-- New Section: Share Page with actual sharing functionality -->
-    <section id="sharePage" class="step">
+    
+    <!-- Customer Share Page (when customer clicks link) -->
+    <section id="customerSharePage" class="step">
       <div class="form-section">
-        <h2>Share your vehicle purchase!</h2>
+        <h2>Share Your Vehicle Purchase!</h2>
         <div class="share-image-container">
-          <img id="shareImage" src="" alt="Share Image" />
+          <img id="customerShareImage" src="" alt="Share Image" />
         </div>
-        <div class="content">
-          <button id="shareButton" class="main-button">Share My Review Image</button>
-        </div>
-        <button type="button" id="backToText">← Back to Text Message</button>
+        <!-- Single Share Now button that triggers native sharing -->
+        <button type="button" id="shareNowButton" class="share-button">Share Now</button>
+        <button type="button" id="backFromCustomerShare">← Back</button>
       </div>
     </section>
   </div>
+  
   <footer id="pageFooter">
     <span class="footer-version">Version d-2.6.1</span>
   </footer>
-  <!-- Cropper.js -->
+  
+  <!-- Include Cropper.js and our demo.js script -->
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
   <script src="demo.js"></script>
 </body>

@@ -1,406 +1,157 @@
-// Global variables
+// demo.js
+
+// === CONFIGURATION ===
+const IMGBB_API_KEY = 'd44d592f97ef193ce535a799d00ef632'; // <-- your imgbb API key
+const FINAL_WIDTH = 1080;
+const FINAL_HEIGHT = 700;
+const ASPECT_RATIO = FINAL_WIDTH / FINAL_HEIGHT; // ~1.542857
+
+// === GLOBAL STATE ===
 let customerData = {};
-let capturedDataUrl = "";         // For camera-taken auto-cropped image
-let originalCapturedDataUrl = ""; // Full-resolution original (for recropping)
-let croppedDataUrl = "";          // Final cropped image
-let cropper = null;               // Cropper.js instance
-let savedCropBoxData = null;      // Saved crop box data from initial crop
-let savedCanvasData = null;       // Saved canvas (pan/zoom) data from initial crop
+let originalCapturedDataUrl = "";
+let croppedDataUrl = "";
+let cropper = null;
 let cameraStream = null;
-let activePointers = new Map();   // For custom pinch-to-zoom
-let currentCamera = "environment"; // "environment" for rear, "user" for front
-let currentScale = 1;             // CSS-based scale for pinch zoom
-let maxZoom = 1;                  // Computed maximum zoom
+let activePointers = new Map();
+let currentCamera = "environment";
+let currentScale = 1;
+let maxZoom = 1;
 
-// Detect iOS device
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (isIOS) {
-    const fitBtn = document.getElementById('fitEntireButton');
-    if (fitBtn) { fitBtn.style.display = 'none'; }
+// === UTILITY FUNCTIONS ===
+function dataURLtoBlob(dataurl) {
+  const parts = dataurl.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const binary = atob(parts[1]);
+  const len = binary.length;
+  const arr = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    arr[i] = binary.charCodeAt(i);
   }
-  // Step 1: Customer Form
-  document.getElementById('toStep2').addEventListener('click', () => {
-    const name = document.getElementById('customerName').value.trim();
-    if (!name) {
-      alert('Please enter the customer name.');
-      return;
-    }
-    customerData.name = name;
-    customerData.email = document.getElementById('customerEmail').value.trim();
-    customerData.phone = document.getElementById('customerPhone').value.trim();
-    showStep('step2');
-  });
-  // Photo Option Buttons
-  document.querySelectorAll('.photo-option').forEach(btn => {
-    btn.addEventListener('click', e => {
-      savedCanvasData = null;
-      savedCropBoxData = null;
-      document.getElementById('photoOptions').style.display = 'none';
-      const option = e.currentTarget.getAttribute('data-option');
-      hideAllPhotoSections();
-      if (option === 'take') {
-        document.getElementById('takePhotoSection').style.display = 'block';
-        startCamera();
-      } else if (option === 'upload') {
-        document.getElementById('uploadPhotoSection').style.display = 'block';
-      } else if (option === 'url') {
-        document.getElementById('urlPhotoSection').style.display = 'block';
-      }
-    });
-  });
-  // Back buttons for upload/URL screens
-  document.querySelectorAll('.backToOptions').forEach(btn => {
-    btn.addEventListener('click', () => {
-      stopCamera();
-      hideAllPhotoSections();
-      document.getElementById('photoOptions').style.display = 'block';
-    });
-  });
-  // Camera Back button (upper left)
-  document.getElementById('cameraBack').addEventListener('click', () => {
-    stopCamera();
-    hideAllPhotoSections();
-    document.getElementById('photoOptions').style.display = 'block';
-  });
-  // File Upload
-  document.getElementById('uploadInput').addEventListener('change', e => {
-    savedCanvasData = null;
-    savedCropBoxData = null;
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        originalCapturedDataUrl = ev.target.result;
-        loadImageForCrop(ev.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-  // URL Input
-  document.getElementById('loadUrlImage').addEventListener('click', () => {
-    savedCanvasData = null;
-    savedCropBoxData = null;
-    const url = document.getElementById('imageUrlInput').value.trim();
-    if (url) {
-      originalCapturedDataUrl = url;
-      loadImageForCrop(url, true);
-    } else {
-      alert('Please enter a valid URL.');
-    }
-  });
-  // Capture Photo
-  document.getElementById('capturePhoto').addEventListener('click', () => {
-    savedCanvasData = null;
-    savedCropBoxData = null;
-    captureFromCamera();
-  });
-  // Swap Camera
-  document.getElementById('swapCamera').addEventListener('click', () => {
-    currentCamera = currentCamera === "environment" ? "user" : "environment";
-    stopCamera();
-    startCamera();
-  });
-  // Flash Toggle
-  document.getElementById('flashToggle').addEventListener('click', e => {
-    const btn = e.currentTarget;
-    if (cameraStream) {
-      const [track] = cameraStream.getVideoTracks();
-      if (track.getCapabilities().torch) {
-        const isOn = btn.classList.contains('flash-on');
-        track.applyConstraints({ advanced: [{ torch: !isOn }] });
-        btn.classList.toggle('flash-on', !isOn);
-        btn.classList.toggle('flash-off', isOn);
-      }
-    }
-  });
-  // Crop Button
-  document.getElementById('cropButton').addEventListener('click', () => {
-    if (cropper) {
-      savedCropBoxData = cropper.getCropBoxData();
-      savedCanvasData = cropper.getCanvasData();
-      const croppedCanvas = cropper.getCroppedCanvas({
-        width: 1080,
-        height: 1080,
-        imageSmoothingQuality: 'high'
-      });
-      croppedDataUrl = croppedCanvas.toDataURL('image/jpeg');
-      cropper.destroy();
-      cropper = null;
-      document.getElementById('finalImage').src = croppedDataUrl;
-      hideAllPhotoSections();
-      showStep('step3');
-    }
-  });
-  // "Fit Entire Image" Button
-  document.getElementById('fitEntireButton').addEventListener('click', () => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.onload = () => {
-      const size = 1080;
-      const canvas = document.createElement('canvas');
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      const scaleCover = Math.max(size / img.width, size / img.height);
-      const coverWidth = img.width * scaleCover;
-      const coverHeight = img.height * scaleCover;
-      const coverDx = (size - coverWidth) / 2;
-      const coverDy = (size - coverHeight) / 2;
-      const scaleFit = Math.min(size / img.width, size / img.height);
-      const fitWidth = img.width * scaleFit;
-      const fitHeight = img.height * scaleFit;
-      const fitDx = (size - fitWidth) / 2;
-      const fitDy = (size - fitHeight) / 2;
-      if ('filter' in ctx) {
-        ctx.filter = 'blur(40px)';
-        ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
-        ctx.filter = 'none';
-        ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-      } else {
-        getBlurredDataURL(img, 40, size, size, (blurredImg) => {
-          ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
-          ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
-        });
-      }
-      croppedDataUrl = canvas.toDataURL('image/jpeg');
-      document.getElementById('finalImage').src = croppedDataUrl;
-      hideAllPhotoSections();
-      showStep('step3');
-    };
-    img.src = originalCapturedDataUrl || capturedDataUrl;
-  });
-  // Cropping Page: Change Photo Button
-  document.getElementById('changePhoto').addEventListener('click', () => {
-    resetPhotoProcess();
-    savedCanvasData = null;
-    savedCropBoxData = null;
-    document.getElementById('photoOptions').style.display = 'block';
-    showStep('step2');
-  });
-  // Final Page: Adjust Cropping Button
-  document.getElementById('adjustCropping').addEventListener('click', () => {
-    const cropImageElement = document.getElementById('cropImage');
-    cropImageElement.src = originalCapturedDataUrl || capturedDataUrl;
-    hideAllPhotoSections();
-    document.getElementById('cropSection').style.display = 'block';
-    initializeCropper(() => {
-      if (savedCanvasData) { cropper.setCanvasData(savedCanvasData); }
-      if (savedCropBoxData) { cropper.setCropBoxData(savedCropBoxData); }
-    });
-    showStep('step2');
-  });
-  // Final Page: Change Photo Button
-  document.getElementById('changeFinalImage').addEventListener('click', () => {
-    resetPhotoProcess();
-    savedCanvasData = null;
-    savedCropBoxData = null;
-    document.getElementById('photoOptions').style.display = 'block';
-    showStep('step2');
-  });
-  // Share Buttons on Step 3
-  document.getElementById('copyLink').addEventListener('click', () => {
-    const linkText = document.getElementById('shortLink').innerText;
-    navigator.clipboard.writeText(linkText).then(() => {
-      alert('Link copied to clipboard.');
-    });
-  });
-  // Text Link button now routes to simulated text message page
-  document.getElementById('textLink').addEventListener('click', () => {
-    showStep('textMessagePage');
-  });
-  // Email and Both Link buttons (simulate sending)
-  document.getElementById('emailLink').addEventListener('click', () => {
-    alert('Simulating sending an email.');
-  });
-  document.getElementById('bothLink').addEventListener('click', () => {
-    alert('Simulating sending text and email.');
-  });
-  // Show QR Code button
-  document.getElementById('showQR').addEventListener('click', () => {
-    const qr = document.getElementById('qrCode');
-    qr.style.display = (qr.style.display === 'none' ? 'block' : 'none');
-  });
-  // Copy prefilled Message
-  document.getElementById('copyMessage').addEventListener('click', () => {
-    const msg = document.getElementById('prefilledMessage');
-    msg.select();
-    document.execCommand('copy');
-    alert('Message copied to clipboard.');
-  });
-  // Start Over button
-  document.getElementById('startOver').addEventListener('click', () => {
-    resetAll();
-    showStep('step1');
-    document.getElementById('photoOptions').style.display = 'block';
-  });
-  // In Text Message Page, Back button returns to step 3
-  document.getElementById('backToStep3').addEventListener('click', () => {
-    showStep('step3');
-  });
-  // In Text Message Page, clicking the link navigates to Share Page
-  document.getElementById('messageLink').addEventListener('click', (e) => {
-    e.preventDefault();
-    // When entering the share page, load the final image (if available)
-    if (croppedDataUrl) {
-      document.getElementById('shareImage').src = croppedDataUrl;
-    } else {
-      // Fallback to a default image
-      document.getElementById('shareImage').src = "https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=";
-    }
-    showStep('sharePage');
-  });
-  // In Share Page, Back button returns to Text Message Page
-  document.getElementById('backToText').addEventListener('click', () => {
-    showStep('textMessagePage');
-  });
-  // NEW: Share Button on Share Page - actual sharing functionality
-  document.getElementById('shareButton').addEventListener('click', async () => {
-    const shareLink = "https://GetMy.Deal/MichaelJones";
-    try {
-      // Copy the share link to clipboard automatically
-      await navigator.clipboard.writeText(shareLink);
-      // Show SweetAlert2 dialog with instructions
-      Swal.fire({
-        title: '<strong>Dealership Share Link Copied!</strong>',
-        html: `
-          <p>We copied the link to your clipboard. Please use it in your Instagram Story by adding a "LINK" sticker.</p>
-          <p>Suggestions:</p>
-          <ul style="text-align: left;">
-            <li>😊 Paste the link as a sticker in your Instagram Story.</li>
-            <li>😁 Use the link in your Instagram feed caption.</li>
-            <li>😃 Share via other social platforms.</li>
-          </ul>
-          <p>Thanks!</p>
-        `,
-        icon: 'success',
-        showCancelButton: true,
-        confirmButtonText: 'Share Now',
-        cancelButtonText: 'Cancel',
-        customClass: {
-          confirmButton: 'swal2-confirm',
-          cancelButton: 'swal2-cancel'
-        }
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          if (croppedDataUrl && navigator.share) {
-            const blob = dataURLtoBlob(croppedDataUrl);
-            const file = new File([blob], "vehicle_review.jpg", { type: blob.type });
-            try {
-              await navigator.share({
-                files: [file],
-                title: 'My Vehicle Purchase',
-                text: 'Check out my vehicle purchase review from Michael Jones at Demo Auto Sales!'
-              });
-            } catch (error) {
-              console.error('Error sharing:', error);
-            }
-          } else {
-            console.log('Web Share API not supported or image data missing.');
-          }
-        }
-      });
-    } catch (error) {
-      console.log('Error copying link or sharing:', error);
-    }
-  });
-});
+  return new Blob([arr], { type: mime });
+}
 
-function showStep(stepId) {
-  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-  document.getElementById(stepId).classList.add('active');
+// === imgbb UPLOAD FUNCTION ===
+async function uploadToImgbb(dataUrl) {
+  // Remove the data header and get base64 string only.
+  const base64Image = dataUrl.split(',')[1];
+  const formData = new FormData();
+  formData.append('image', base64Image);
+  formData.append('key', IMGBB_API_KEY);
+  
+  const response = await fetch('https://api.imgbb.com/1/upload', {
+    method: 'POST',
+    body: formData
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error('Upload to imgbb failed: ' + errText);
+  }
+  const result = await response.json();
+  return result.data.display_url; // This is the public image URL from imgbb
 }
+
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
 function hideAllPhotoSections() {
-  document.querySelectorAll('.photo-section').forEach(section => section.style.display = 'none');
+  document.querySelectorAll('.photo-section').forEach(s => s.style.display = 'none');
 }
+
 function resetPhotoProcess() {
   stopCamera();
   hideAllPhotoSections();
   if (cropper) { cropper.destroy(); cropper = null; }
-  capturedDataUrl = "";
+  originalCapturedDataUrl = "";
   croppedDataUrl = "";
-  document.getElementById('uploadInput').value = '';
-  document.getElementById('imageUrlInput').value = '';
+  const up = document.getElementById('uploadInput');
+  if (up) up.value = "";
+  const urlIn = document.getElementById('imageUrlInput');
+  if (urlIn) urlIn.value = "";
 }
+
 function setupPrefilledMessage() {
-  const msgTemplate = `${customerData.name},\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nMichael Jones\nDemo Auto Sales`;
-  document.getElementById('prefilledMessage').value = msgTemplate;
-  document.getElementById('finalImage').src = croppedDataUrl;
+  const msgTemplate = customerData.name + ",\n\nThanks for purchasing a car with me today. I would appreciate if you followed the link to share a review and photo of your new car on social media, to let your friends and family know!\n\nMichael Jones\nDemo Auto Sales";
+  const msgField = document.getElementById('prefilledMessage');
+  if (msgField) msgField.value = msgTemplate;
 }
+
+// === NATIVE B2 CODE REMOVED; imgbb is used instead ===
+
+// === PINCH-ZOOM ON VIDEO ===
 function initPinchZoom(video) {
   activePointers.clear();
-  let initialDistance = 0;
-  let initialScale = currentScale;
+  let initialDistance = 0, initialScale = currentScale;
   const zoomIndicator = document.getElementById('zoomIndicator');
   video.addEventListener('pointerdown', e => {
     e.preventDefault();
     activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (activePointers.size === 2) {
-      const points = Array.from(activePointers.values());
-      initialDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+      const pts = Array.from(activePointers.values());
+      initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       initialScale = currentScale;
     }
   });
   video.addEventListener('pointermove', e => {
     e.preventDefault();
-    if (activePointers.has(e.pointerId)) {
-      activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (activePointers.size === 2) {
-        const points = Array.from(activePointers.values());
-        const newDistance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-        const ratio = newDistance / initialDistance;
-        let newScale = initialScale * ratio;
-        currentScale = newScale;
-        let transform = video.style.transform;
-        let translateX = 0, translateY = 0;
-        const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
-        if (match) {
-          translateX = parseFloat(match[1]);
-          translateY = parseFloat(match[2]);
-        }
-        video.style.transform = `translate(${translateX}px, ${translateY}px) scale(${newScale})`;
-        zoomIndicator.style.display = "block";
-        zoomIndicator.innerText = ratio > 1 ? "Zooming In..." : "Zooming Out...";
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      currentScale = initialScale * (newDist / initialDistance);
+      video.style.transform = `scale(${currentScale})`;
+      if (zoomIndicator) {
+        zoomIndicator.style.display = 'block';
+        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? 'Zooming In…' : 'Zooming Out…';
       }
     }
   });
-  video.addEventListener('pointerup', e => {
-    e.preventDefault();
-    activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { zoomIndicator.style.display = "none"; }
-  });
-  video.addEventListener('pointercancel', e => {
-    e.preventDefault();
-    activePointers.delete(e.pointerId);
-    if (activePointers.size < 2) { zoomIndicator.style.display = "none"; }
+  ['pointerup','pointercancel'].forEach(evt => {
+    video.addEventListener(evt, e => {
+      e.preventDefault();
+      activePointers.delete(e.pointerId);
+      if (activePointers.size < 2 && zoomIndicator) {
+        zoomIndicator.style.display = 'none';
+      }
+    });
   });
 }
+
+// === CAMERA HANDLING ===
 function startCamera() {
   const video = document.getElementById('cameraPreview');
   currentScale = 1;
-  video.style.transform = `scale(${currentScale})`;
+  if (video) video.style.transform = `scale(${currentScale})`;
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
       .then(stream => {
         cameraStream = stream;
-        video.srcObject = stream;
-        video.play();
-        initPinchZoom(video);
+        if (video) {
+          video.srcObject = stream;
+          video.play();
+          initPinchZoom(video);
+        }
       })
-      .catch(err => { alert('Camera access denied or not available.'); });
+      .catch(() => alert('Camera access denied or not available.'));
   }
 }
+
 function stopCamera() {
   if (cameraStream) {
-    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream.getTracks().forEach(t => t.stop());
     cameraStream = null;
   }
 }
+
+// === IMAGE CAPTURE & CROPPING ===
 function captureFromCamera() {
   const container = document.getElementById('cameraContainer');
-  const rect = container.getBoundingClientRect();
+  const rect = container ? container.getBoundingClientRect() : null;
   const video = document.getElementById('cameraPreview');
+  if (!rect || !video) return;
   let sx, sy, sWidth, sHeight;
   const containerRatio = rect.width / rect.height;
   const videoRatio = video.videoWidth / video.videoHeight;
@@ -415,95 +166,323 @@ function captureFromCamera() {
     sx = 0;
     sy = (video.videoHeight - sHeight) / 2;
   }
-  // Use 1600x1600 (4x resolution) for higher quality
   const captureWidth = 1600;
   const captureHeight = 1600;
   const fullCanvas = document.createElement('canvas');
   fullCanvas.width = captureWidth;
   fullCanvas.height = captureHeight;
   const ctx = fullCanvas.getContext('2d');
-  ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureWidth, captureHeight);
-  // Crop a centered 1200x1200 region from the 1600x1600 canvas
-  const cropSize = 1200;
-  const cropOffset = (captureWidth - cropSize) / 2;
+  if (ctx) {
+    ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureWidth, captureHeight);
+  }
+  const offsetX = (captureWidth - FINAL_WIDTH) / 2;
+  const offsetY = (captureHeight - FINAL_HEIGHT) / 2;
   const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = cropSize;
-  cropCanvas.height = cropSize;
+  cropCanvas.width = FINAL_WIDTH;
+  cropCanvas.height = FINAL_HEIGHT;
   const cropCtx = cropCanvas.getContext('2d');
-  cropCtx.drawImage(fullCanvas, cropOffset, cropOffset, cropSize, cropSize, 0, 0, cropSize, cropSize);
+  if (cropCtx) {
+    cropCtx.drawImage(fullCanvas, offsetX, offsetY, FINAL_WIDTH, FINAL_HEIGHT, 0, 0, FINAL_WIDTH, FINAL_HEIGHT);
+  }
   originalCapturedDataUrl = fullCanvas.toDataURL('image/jpeg');
-  capturedDataUrl = cropCanvas.toDataURL('image/jpeg');
-  croppedDataUrl = capturedDataUrl;
+  croppedDataUrl = cropCanvas.toDataURL('image/jpeg');
   stopCamera();
-  document.getElementById('finalImage').src = croppedDataUrl;
-  setupPrefilledMessage();
-  showStep('step3');
+  // Upload to imgbb and show final page.
+  uploadToImgbb(croppedDataUrl)
+    .then(publicUrl => {
+      document.getElementById('finalImage').src =
+        'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' +
+        encodeURIComponent(publicUrl);
+      showStep('step3');
+    })
+    .catch(err => alert(err));
 }
+
 function loadImageForCrop(src, isUrl = false) {
-  savedCanvasData = null;
-  savedCropBoxData = null;
-  if (isUrl) { document.getElementById('cropImage').crossOrigin = "Anonymous"; }
   originalCapturedDataUrl = src;
-  document.getElementById('cropImage').src = src;
+  const img = document.getElementById('cropImage');
+  if (img) {
+    if (isUrl) img.crossOrigin = "Anonymous";
+    img.src = src;
+  }
   hideAllPhotoSections();
-  document.getElementById('cropSection').style.display = 'block';
-  initializeCropper();
-}
-function initializeCropper(callback) {
-  if (cropper) { cropper.destroy(); }
-  const image = document.getElementById('cropImage');
-  cropper = new Cropper(image, {
-    aspectRatio: 1,
+  const cropSection = document.getElementById('cropSection');
+  if (cropSection) cropSection.style.display = 'block';
+  if (cropper) cropper.destroy();
+  cropper = new Cropper(img, {
+    aspectRatio: ASPECT_RATIO,
     viewMode: 1,
+    autoCropArea: 0.8,
+    dragMode: 'move',
     movable: true,
     zoomable: true,
-    rotatable: false,
-    scalable: false,
     cropBoxResizable: false,
-    autoCropArea: 0.8,
-    responsive: true,
-    guides: false,
-    highlight: false,
-    background: true,
-    dragMode: 'move',
     cropBoxMovable: false,
-    toggleDragModeOnDblclick: false,
-    ready: function () {
-      const imageData = cropper.getImageData();
-      const cropBoxData = cropper.getCropBoxData();
-      if (imageData.naturalWidth < imageData.naturalHeight) {
-        maxZoom = cropBoxData.width / imageData.naturalWidth;
+    ready() { /* Optional: set maxZoom if desired */ }
+  });
+}
+
+// === EVENT LISTENERS SETUP ===
+document.addEventListener('DOMContentLoaded', () => {
+  // Step 1 → Step 2
+  document.getElementById('toStep2')?.addEventListener('click', () => {
+    const name = document.getElementById('customerName')?.value.trim();
+    if (!name) return alert('Please enter the customer name.');
+    customerData.name = name;
+    customerData.email = document.getElementById('customerEmail')?.value.trim() || '';
+    customerData.phone = document.getElementById('customerPhone')?.value.trim() || '';
+    showStep('step2');
+  });
+
+  // Photo option buttons
+  document.querySelectorAll('.photo-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      hideAllPhotoSections();
+      document.getElementById('photoOptions').style.display = 'none';
+      const opt = btn.getAttribute('data-option');
+      if (opt === 'take') {
+        document.getElementById('takePhotoSection').style.display = 'block';
+        startCamera();
+      } else if (opt === 'upload') {
+        document.getElementById('uploadPhotoSection').style.display = 'block';
       } else {
-        maxZoom = cropBoxData.width / imageData.naturalHeight;
+        document.getElementById('urlPhotoSection').style.display = 'block';
+      }
+    });
+  });
+
+  // Back-to-options
+  document.querySelectorAll('.backToOptions').forEach(btn => {
+    btn.addEventListener('click', () => {
+      resetPhotoProcess();
+      document.getElementById('photoOptions').style.display = 'block';
+    });
+  });
+  document.getElementById('cameraBack')?.addEventListener('click', () => {
+    resetPhotoProcess();
+    document.getElementById('photoOptions').style.display = 'block';
+  });
+
+  // File Upload
+  document.getElementById('uploadInput')?.addEventListener('change', e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => loadImageForCrop(ev.target.result);
+    reader.readAsDataURL(file);
+  });
+
+  // Paste URL
+  document.getElementById('loadUrlImage')?.addEventListener('click', () => {
+    const url = document.getElementById('imageUrlInput')?.value.trim();
+    if (!url) return alert('Please enter a valid URL.');
+    loadImageForCrop(url, true);
+  });
+
+  // Capture
+  document.getElementById('capturePhoto')?.addEventListener('click', captureFromCamera);
+
+  // Swap / flash
+  document.getElementById('swapCamera')?.addEventListener('click', () => {
+    currentCamera = currentCamera === 'environment' ? 'user' : 'environment';
+    stopCamera(); startCamera();
+  });
+  document.getElementById('flashToggle')?.addEventListener('click', e => {
+    const btn = e.currentTarget;
+    if (!cameraStream) return;
+    const [track] = cameraStream.getVideoTracks();
+    if (!track.getCapabilities().torch) return;
+    const on = btn.classList.toggle('flash-on');
+    track.applyConstraints({ advanced: [{ torch: on }] });
+  });
+
+  // Crop → upload & show final page
+  document.getElementById('cropButton')?.addEventListener('click', () => {
+    if (!cropper) return;
+    const canvas = cropper.getCroppedCanvas({ width: FINAL_WIDTH, height: FINAL_HEIGHT });
+    croppedDataUrl = canvas.toDataURL('image/jpeg');
+    cropper.destroy(); cropper = null;
+    uploadToImgbb(croppedDataUrl)
+      .then(publicUrl => {
+        document.getElementById('finalImage').src =
+          'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
+        setupPrefilledMessage();
+        showStep('step3');
+      })
+      .catch(err => alert(err));
+  });
+
+  // Fit Entire Image
+  document.getElementById('fitEntireButton')?.addEventListener('click', () => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = FINAL_WIDTH; canvas.height = FINAL_HEIGHT;
+      const ctx = canvas.getContext('2d');
+      const scaleCover = Math.max(FINAL_WIDTH/img.width, FINAL_HEIGHT/img.height);
+      const coverWidth = img.width * scaleCover, coverHeight = img.height * scaleCover;
+      const coverDx = (FINAL_WIDTH - coverWidth) / 2, coverDy = (FINAL_HEIGHT - coverHeight) / 2;
+      const scaleFit = Math.min(FINAL_WIDTH/img.width, FINAL_HEIGHT/img.height);
+      const fitWidth = img.width * scaleFit, fitHeight = img.height * scaleFit;
+      const fitDx = (FINAL_WIDTH - fitWidth) / 2, fitDy = (FINAL_HEIGHT - fitHeight) / 2;
+      if (ctx) {
+        if ('filter' in ctx) {
+          ctx.filter = 'blur(40px)';
+          ctx.drawImage(img, coverDx, coverDy, coverWidth, coverHeight);
+          ctx.filter = 'none';
+          ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+        } else {
+          getBlurredDataURL(img, 40, FINAL_WIDTH, FINAL_HEIGHT, function(blurredImg) {
+            ctx.drawImage(blurredImg, coverDx, coverDy, coverWidth, coverHeight);
+            ctx.drawImage(img, fitDx, fitDy, fitWidth, fitHeight);
+          });
+        }
+      }
+      croppedDataUrl = canvas.toDataURL('image/jpeg');
+      uploadToImgbb(croppedDataUrl)
+        .then(publicUrl => {
+          document.getElementById('finalImage').src =
+            'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
+          setupPrefilledMessage();
+          showStep('step3');
+        })
+        .catch(err => alert(err));
+    };
+    img.src = originalCapturedDataUrl || croppedDataUrl;
+  });
+
+  // Change photo
+  document.getElementById('changePhoto')?.addEventListener('click', () => {
+    resetPhotoProcess();
+    document.getElementById('photoOptions').style.display = 'block';
+    showStep('step2');
+  });
+
+  // Salesperson final page – Text link shows simulated SMS
+  document.getElementById('textLink')?.addEventListener('click', () => {
+    showStep('textMessagePage');
+  });
+  document.getElementById('backToStep3')?.addEventListener('click', () => {
+    showStep('step3');
+  });
+
+  // Text message page – clicking link goes to customer share page
+  document.getElementById('messageLink')?.addEventListener('click', e => {
+    e.preventDefault();
+    uploadToImgbb(croppedDataUrl)
+      .then(publicUrl => {
+        document.getElementById('customerShareImage').src =
+          'https://my.reviewshare.pics/i/mpbPVerBH.png?custom_image_1=' + encodeURIComponent(publicUrl);
+        showStep('customerSharePage');
+      })
+      .catch(err => alert(err));
+  });
+
+  // Customer Share Page – Share Now button
+  document.getElementById('shareNowButton')?.addEventListener('click', () => {
+    if (!navigator.share) return alert('Share API not supported');
+    const blob = dataURLtoBlob(croppedDataUrl);
+    const file = new File([blob], 'vehicle_review.jpg', { type: blob.type });
+    navigator.share({
+      files: [file],
+      title: 'My Vehicle Purchase',
+      text: 'Check out my vehicle purchase review from Michael Jones at Demo Auto Sales!'
+    }).catch(console.error);
+  });
+  document.getElementById('backFromCustomerShare')?.addEventListener('click', () => {
+    showStep('textMessagePage');
+  });
+
+  // Start over
+  document.getElementById('startOver')?.addEventListener('click', () => {
+    resetPhotoProcess();
+    showStep('step1');
+    document.getElementById('photoOptions').style.display = 'block';
+  });
+});
+
+// === imgbb UPLOAD FUNCTION ===
+async function uploadToImgbb(dataUrl) {
+  const imgbbApiKey = 'd44d592f97ef193ce535a799d00ef632'; // Your imgbb API key
+  // Remove data header and get base64 string only
+  const base64Image = dataUrl.split(',')[1];
+  const formData = new FormData();
+  formData.append('image', base64Image);
+  formData.append('key', imgbbApiKey);
+  const response = await fetch('https://api.imgbb.com/1/upload', {
+    method: 'POST',
+    body: formData
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error('Upload to imgbb failed: ' + errorText);
+  }
+  const result = await response.json();
+  return result.data.display_url;
+}
+
+function getBlurredDataURL(img, blurAmount, width, height, callback) { callback(img); }
+
+function initPinchZoom(video) {
+  activePointers.clear();
+  let initialDistance = 0;
+  let initialScale = currentScale;
+  const zoomIndicator = document.getElementById('zoomIndicator');
+  video.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      initialDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      initialScale = currentScale;
+    }
+  });
+  video.addEventListener('pointermove', function(e) {
+    e.preventDefault();
+    if (!activePointers.has(e.pointerId)) return;
+    activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      const newDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      currentScale = initialScale * (newDist / initialDistance);
+      video.style.transform = `scale(${currentScale})`;
+      if (zoomIndicator) {
+        zoomIndicator.style.display = 'block';
+        zoomIndicator.innerText = (newDist / initialDistance) > 1 ? 'Zooming In…' : 'Zooming Out…';
       }
     }
   });
-  if (typeof callback === 'function') { setTimeout(callback, 100); }
-}
-function getBlurredDataURL(img, blurAmount, width, height, callback) { callback(img); }
-function resetAll() {
-  customerData = {};
-  capturedDataUrl = "";
-  originalCapturedDataUrl = "";
-  croppedDataUrl = "";
-  savedCropBoxData = null;
-  savedCanvasData = null;
-  if (cropper) { cropper.destroy(); cropper = null; }
-  document.getElementById('customerForm').reset();
-  resetPhotoProcess();
-  hideAllPhotoSections();
+  ['pointerup','pointercancel'].forEach(evt => {
+    video.addEventListener(evt, function(e) {
+      e.preventDefault();
+      activePointers.delete(e.pointerId);
+      if (activePointers.size < 2 && zoomIndicator) zoomIndicator.style.display = 'none';
+    });
+  });
 }
 
-// Helper: Convert data URL to Blob
-function dataURLtoBlob(dataurl) {
-  const arr = dataurl.split(',');
-  const mimeMatch = arr[0].match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : '';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while(n--) {
-      u8arr[n] = bstr.charCodeAt(n);
+function startCamera() {
+  const video = document.getElementById('cameraPreview');
+  currentScale = 1;
+  if (video) video.style.transform = `scale(${currentScale})`;
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } })
+      .then(function(stream) {
+        cameraStream = stream;
+        if (video) {
+          video.srcObject = stream;
+          video.play();
+          initPinchZoom(video);
+        }
+      })
+      .catch(function(err) { alert('Camera access denied or not available.'); });
   }
-  return new Blob([u8arr], {type:mime});
+}
+
+function stopCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(function(track) { track.stop(); });
+    cameraStream = null;
+  }
 }
