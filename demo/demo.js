@@ -58,8 +58,15 @@ function showStep(id) {
   const el = document.getElementById(id);
   if (el) {
     el.classList.add('active');
-    // When entering the Final Options Page, populate final images and review text.
+    // When showing the text message page, update the sender name from customerData
+    if (id === 'textMessagePage') {
+      const senderElem = el.querySelector('.sender');
+      if (senderElem) {
+        senderElem.innerText = customerData.name + ",";
+      }
+    }
     if (id === 'finalOptionsPage') {
+      // Populate Final Options Page with final images and review text.
       const finalImage = document.getElementById('finalImage');
       const vehicleShareImg = document.getElementById('finalVehicleShareImage');
       if (finalImage && vehicleShareImg) {
@@ -270,7 +277,7 @@ function loadImageForCrop(src, isUrl = false) {
   });
 }
 
-// Show QR Share Page by setting the QR code image via a public API.
+// Function to show the QR Share Page.
 function showQRPage() {
   const shareUrl = "justshar.ing/xyz";
   const qrImage = document.getElementById('qrCodeImage');
@@ -432,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('step3');
   });
   
-  // QR Code Button – Show QR Page (calls our showQRPage function)
+  // QR Code Button – Show QR Page
   document.getElementById('showQRButton')?.addEventListener('click', () => {
     showQRPage();
   });
@@ -442,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showStep('step3');
   });
   
-  // Text Message Page – Clicking Link: Set final image to Vehicle Share Page and show it.
+  // Text Message Page – Clicking Link: Set final image for Vehicle Share Page and show it.
   document.getElementById('messageLink')?.addEventListener('click', e => {
     e.preventDefault();
     const finalImgSrc = document.getElementById('finalImage')?.src || "";
@@ -458,11 +465,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareLink = "https://GetMy.Deal/MichaelJones";
     try {
       await navigator.clipboard.writeText(shareLink);
-      // Show modal with instructions and contact link confirmation.
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link below has been copied to your clipboard; simply paste it in your post or story.</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link below has been copied to your clipboard; simply paste it in your post or story when you share the image!</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -495,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } catch (err) {
-      alert("Failed to copy link");
+      alert("Failed to copy link: https://GetMy.Deal/MichaelJones");
     }
   });
   
@@ -541,7 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link below has been copied to your clipboard; simply paste it when sharing the image.</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link has been copied to your clipboard; simply paste it when sharing the image.</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
@@ -574,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
     } catch (err) {
-      alert("Failed to copy link");
+      alert("Failed to copy link: https://GetMy.Deal/MichaelJones");
     }
   });
   
@@ -658,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire({
         title: `<strong>Contact Link Saved to Clipboard!</strong>`,
         html: `
-          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link has been copied to your clipboard; simply paste it in your post or story when sharing the image.</p>
+          <p>Help friends and family contact Michael Jones - Demo Auto Sales directly for any car shopping needs. The link has been copied to your clipboard; simply paste it in your post or story when sharing the image!</p>
           <ul style="text-align: left;">
             <li>😊 Paste it as a sticker in your Instagram Story.</li>
             <li>😃 Paste it as a comment on your Facebook post.</li>
